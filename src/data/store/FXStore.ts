@@ -1,33 +1,44 @@
 import { create } from "zustand";
 import * as Tone from "tone";
-import { useLoopStore } from "./LoopStore.ts";
 
-interface FXStore {
-  reverb_FX: (trackIndex: number) => void;
+interface Bundle {
+  bundleName: string;
+  bundleParams: { fxs: { fxName: string; fx: Tone.ToneAudioNode }[] | [] };
 }
 
-export const useFXStore = create<FXStore>(() => ({
-  reverb_FX: (trackIndex: number) => {
-    const { tracks } = useLoopStore.getState();
-    const track = tracks[trackIndex];
-
-    if (!track.player) return;
-
-    if (track.buffer) {
-      const pitchShift = new Tone.PitchShift(-12);
-      const eq = new Tone.EQ3({ low: +18, mid: -3, high: -18 });
-      const distortion = new Tone.Distortion(0.3);
-      const reverb = new Tone.Reverb({ decay: 2, wet: 0.2 });
-
-      track.player.disconnect();
-
-      track.player.chain(
-        pitchShift,
-        eq,
-        distortion,
-        reverb,
-        Tone.getDestination()
-      );
+interface FXStore {
+  bundleArray: Bundle[];
+  reverb_FX: (
+    bundleIndex: number,
+    FX_Params: {
+      decay: number;
+      preDelay: number;
+      wet: number;
     }
+  ) => void;
+}
+export const useFXStore = create<FXStore>((set, get) => ({
+  bundleArray: [],
+  reverb_FX: (
+    bundleIndex,
+    params: { decay: number; preDelay: number; wet: number }
+  ) => {
+    const bundles = get().bundleArray;
+    const bundle = bundles[bundleIndex];
+
+    const reverb = new Tone.Reverb(params);
+    set((state) => {
+      const newBundleArray = [...state.bundleArray];
+      const newBundleFXs = [
+        ...(bundle.bundleParams.fxs || []),
+        { fxName: "reverb", fx: reverb },
+      ];
+      newBundleArray[bundleIndex] = {
+        ...bundle,
+        bundleParams: { fxs: newBundleFXs },
+      };
+
+      return { bundleArray: newBundleArray };
+    });
   },
 }));

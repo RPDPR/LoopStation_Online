@@ -1,5 +1,5 @@
 import { InputFxBucket } from "./inputFxContent/InputFxBucket.tsx";
-import { MasterFxBucket } from "./masterFxContent/masterFxBucket.tsx";
+import { MasterFxBucket } from "./masterFxContent/MasterFxBucket.tsx";
 import { BpmAdjuster } from "./toolsContent/BpmAdjuster.tsx";
 import { Metronome } from "./toolsContent/Metronome.tsx";
 

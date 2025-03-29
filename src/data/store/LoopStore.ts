@@ -102,8 +102,15 @@ export const useLoopStore = create<LoopStore>((set, get) => ({
     const tracks = get().tracks;
     const track = tracks[trackIndex];
 
-    if (track.state_pause === LoopState_Pause.Paused) {
-      if (track.player) track.player.start();
+    if (
+      track.state_pause === LoopState_Pause.Paused &&
+      track.state_rec !== LoopState_Rec.Idle
+    ) {
+      const measure = get().measure;
+      const bpm = get().bpm;
+      const startTime =
+        Math.ceil(Tone.now() / ((measure * 60) / bpm)) * ((measure * 60) / bpm);
+      if (track.player) track.player.start(startTime);
       set((state) => {
         const newTracks = [...state.tracks];
         newTracks[trackIndex] = {
@@ -141,6 +148,8 @@ export const useLoopStore = create<LoopStore>((set, get) => ({
     const MIN_TRACK_LENGTH = 0.25;
     const bpm = get().bpm;
     const measure = get().measure;
+    const startTime =
+      Math.ceil(Tone.now() / ((measure * 60) / bpm)) * ((measure * 60) / bpm);
 
     const recording = await track.recorder.stop();
     if (!recording) return;
@@ -187,7 +196,7 @@ export const useLoopStore = create<LoopStore>((set, get) => ({
             track.effects
           );
 
-          newPlayer.start();
+          newPlayer.start(startTime);
 
           set((state) => {
             const newTracks = [...state.tracks];
@@ -281,11 +290,12 @@ export const useLoopStore = create<LoopStore>((set, get) => ({
         ...track,
         state_pause: LoopState_Pause.Paused,
         state_rec:
-          track.state_rec !== LoopState_Rec.Idle
-            ? LoopState_Rec.Playing
-            : LoopState_Rec.Idle,
+          (track.state_rec === LoopState_Rec.Overdubbing && !track.player) ||
+          track.state_rec !== LoopState_Rec.Playing
+            ? LoopState_Rec.Idle
+            : LoopState_Rec.Playing,
       };
-
+      console.log(LoopState_Rec[newTracks[trackIndex].state_rec]);
       // const pitchShift = new Tone.PitchShift(-12);
       // const eq = new Tone.EQ3({ low: +12, mid: -3, high: -18 });
       // const distortion = new Tone.Distortion(0.3);
