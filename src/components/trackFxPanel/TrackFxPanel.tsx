@@ -1,14 +1,14 @@
 import React from "react";
-import { TrackFxBucket } from "./trackFxBucket/TrackFxBucket.tsx";
+import { TrackFx } from "@trackFx/TrackFx.tsx";
 
 export const TrackFxPanel: React.FC = () => {
   return (
     <div className="mx-auto w-[95%] h-[93px] flex justify-center items-center mb-[2.5rem]">
-      <TrackFxBucket trackIndex={0} />
-      <TrackFxBucket trackIndex={1} />
-      <TrackFxBucket trackIndex={2} />
-      <TrackFxBucket trackIndex={3} />
-      <TrackFxBucket trackIndex={4} />
+      <TrackFx trackIndex={0} />
+      <TrackFx trackIndex={1} />
+      <TrackFx trackIndex={2} />
+      <TrackFx trackIndex={3} />
+      <TrackFx trackIndex={4} />
     </div>
   );
 };

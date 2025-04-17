@@ -1,5 +1,6 @@
+import React from "react";
 import { Plus } from "lucide-react";
-import { useFXStore } from "../../../../../data/store/FXStore.ts";
+import { useFXStore } from "@data/store/FXStore.ts";
 
 export const BundleCard_Blank: React.FC = () => {
   const bundleArray = useFXStore((state) => state.bundleArray);
@@ -26,7 +27,7 @@ export const BundleCard_Blank: React.FC = () => {
     addBundle(newBundle);
   };
 
-  const handleClick = () => {
+  const handleClick: React.MouseEventHandler<HTMLDivElement> = () => {
     addNewBundle();
   };
 

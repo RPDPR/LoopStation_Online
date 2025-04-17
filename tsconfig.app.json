@@ -14,6 +14,18 @@
     "moduleDetection": "force",
     "noEmit": true,
     "jsx": "react-jsx",
+    "baseUrl": "src",
+    "paths": {
+      "@components/*": ["components/*"],
+      "@data/*": ["data/*"],
+      "@assets/*": ["assets/*"],
+
+      "@globalFx/*": ["components/globalFxPanel/globalFx/*"],
+      "@loop/*": ["components/loopPanel/loop/*"],
+      "@settings/*": ["components/settingsPanel/settings/*"],
+      "@trackFx/*": ["components/trackFxPanel/trackFx/*"],
+      "@workshop/*": ["components/workshopPanel/workshop/*"]
+    },
 
     /* Linting */
     "strict": true,

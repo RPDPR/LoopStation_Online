@@ -1,10 +1,4 @@
-import { useState } from "react";
-
-import {
-  useFXStore,
-  Bundle,
-  fxNames,
-} from "../../../../../data/store/FXStore.ts";
+import { useFXStore } from "../../../../../data/store/FXStore.ts";
 
 type T_BundleCard = {
   bundleID: number;
@@ -17,7 +11,7 @@ export const BundleCard: React.FC<T_BundleCard> = ({ bundleID }) => {
   const bundle = bundleArray.find((b) => b.bundleID === bundleID);
   const isSelected = bundle?.bundleIsSelected ?? false;
 
-  const handleClick = () => {
+  const handleClick: React.MouseEventHandler<HTMLDivElement> = () => {
     bundleArray.forEach((bundle) => {
       setBundleSelection(bundle.bundleID, bundle.bundleID === bundleID);
     });
