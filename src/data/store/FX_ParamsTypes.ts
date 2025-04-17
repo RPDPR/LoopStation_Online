@@ -1,6 +1,5 @@
 type T_FXParam = {
   NUMBER: {
-    value: number;
     min: number;
     max: number;
     step?: number;
@@ -13,7 +12,7 @@ type FXParamType = keyof T_FXParam;
 type FXParam<T extends FXParamType, V> = V extends T_FXParam[T] ? V : never;
 
 type T_Reverb_FX = {
-  decay: FXParam<"NUMBER", { min: 0 }>;
+  decay: FXParam<"NUMBER", { min: 0; max: 1 }>;
   preDelay: number;
   wet: number;
 };

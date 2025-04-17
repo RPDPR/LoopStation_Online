@@ -1,5 +1,4 @@
 import React from "react";
-import { useState } from "react";
 import { useFXStore } from "../../../../../../../data/store/FXStore.ts";
 
 type T_DryWet = {
@@ -7,14 +6,12 @@ type T_DryWet = {
 };
 
 export const DryWet: React.FC<T_DryWet> = ({ bundleSelectedID }) => {
-  const [dryWetValue, setDryWetValue] = useState<number>(50);
   const setBundleParams = useFXStore((state) => state.setBundleParams);
   const bundleArray = useFXStore((state) => state.bundleArray);
   const bundle = bundleArray[bundleSelectedID];
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setBundleParams(bundle.bundleID, { dryWetValue: Number(e.target.value) });
-    setDryWetValue(Number(e.target.value));
   };
 
   return (
@@ -22,9 +19,9 @@ export const DryWet: React.FC<T_DryWet> = ({ bundleSelectedID }) => {
       <div className="w-8 flex justify-center items-center">
         <input
           type="range"
-          min="0"
-          max="100"
-          step="0.1"
+          min={bundle.bundleParams.dryWet.min}
+          max={bundle.bundleParams.dryWet.max}
+          step={bundle.bundleParams.dryWet.step}
           className="w-full h-1 bg-[#757575] rounded-lg appearance-none cursor-pointer 
                [&::-webkit-slider-thumb]:appearance-none 
                [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 
@@ -37,7 +34,7 @@ export const DryWet: React.FC<T_DryWet> = ({ bundleSelectedID }) => {
                [&::-moz-range-thumb]:cursor-pointer 
                [&::-moz-range-thumb]:transition-colors 
                [&::-moz-range-thumb]:hover:bg-gray-200"
-          value={dryWetValue}
+          value={bundle.bundleParams.dryWet.dryWetValue}
           onChange={handleChange}
         />
       </div>

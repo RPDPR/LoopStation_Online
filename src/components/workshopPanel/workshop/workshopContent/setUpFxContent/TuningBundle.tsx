@@ -1,4 +1,3 @@
-import { fxNames } from "@data/store/FXStore.ts";
 import { useFXStore } from "@data/store/FXStore.ts";
 import { BundleHeader } from "./TuningBundleContent/BundleHeader.tsx";
 import { BundleSettings } from "./TuningBundleContent/BundleSettings.tsx";

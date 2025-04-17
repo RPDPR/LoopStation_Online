@@ -10,6 +10,21 @@ export const fxNames = {
 
 export type fxNames = (typeof fxNames)[keyof typeof fxNames];
 
+type T_bundleOutputGain = {
+  gainValue: number;
+  gainNode: Tone.ToneAudioNode;
+  min: number;
+  max: number;
+  step?: number;
+};
+type T_bundleDryWet = {
+  dryWetValue: number;
+  dryWetNode: Tone.ToneAudioNode;
+  min: number;
+  max: number;
+  step?: number;
+};
+
 export interface Bundle {
   bundleID: number;
   bundleName: string;
@@ -22,14 +37,14 @@ export interface Bundle {
           fxIsSelected: boolean;
           fx: Tone.ToneAudioNode | null;
         }[];
-    outputGain: Tone.ToneAudioNode | null;
-    dryWet: Tone.ToneAudioNode | null;
+    outputGain: T_bundleOutputGain;
+    dryWet: T_bundleDryWet;
   };
 }
 
 interface FXStore {
   bundleArray: Bundle[];
-  addBundle: (bundle: Bundle) => void;
+  addBundle: () => void;
   setBundleSelection: (
     bundleID: Bundle["bundleID"],
     isSelected: boolean
@@ -67,10 +82,37 @@ interface FXStore {
 }
 export const useFXStore = create<FXStore>((set, get) => ({
   bundleArray: [],
-  addBundle: (bundle: Bundle) => {
-    const newBundleArray = [...get().bundleArray];
-    newBundleArray.push(bundle);
-    set({ bundleArray: newBundleArray });
+  addBundle: () => {
+    set((state) => {
+      const newBundleArray = [...state.bundleArray];
+
+      const newBundleObject: Bundle = {
+        bundleID: Number(newBundleArray.length),
+        bundleName: "Bundle_" + String(newBundleArray.length + 1),
+        bundleIsSelected: false,
+        bundleParams: {
+          fxs: [],
+          outputGain: {
+            gainValue: 50,
+            gainNode: new Tone.Gain(1),
+            min: 0,
+            max: 100,
+            step: 0.1,
+          },
+          dryWet: {
+            dryWetValue: 50,
+            dryWetNode: new Tone.CrossFade(0.5),
+            min: 0,
+            max: 100,
+            step: 0.1,
+          },
+        },
+      };
+
+      newBundleArray.push(newBundleObject);
+
+      return { bundleArray: newBundleArray };
+    });
   },
 
   setBundleSelection: (bundleID: Bundle["bundleID"], isSelected: boolean) => {
@@ -106,30 +148,36 @@ export const useFXStore = create<FXStore>((set, get) => ({
       dryWetValue?: number;
     }
   ) => {
-    const bundles = get().bundleArray;
-    const bundle = bundles[bundleID];
-
-    const newBundleParams = {
-      ...bundle.bundleParams,
-    };
-
-    if (params.gainValue !== undefined) {
-      const gainValue =
-        params.gainValue <= 50
-          ? params.gainValue / 50
-          : 1 + (params.gainValue - 50) * 0.06;
-
-      const gain = new Tone.Gain(gainValue);
-      newBundleParams.outputGain = gain;
-    }
-
-    if (params.dryWetValue !== undefined) {
-      const dryWet = new Tone.CrossFade(params.dryWetValue / 100);
-      newBundleParams.dryWet = dryWet;
-    }
-
     set((state) => {
       const newBundleArray = [...state.bundleArray];
+      const bundle = newBundleArray[bundleID];
+      const newBundleParams: Bundle["bundleParams"] = {
+        ...bundle.bundleParams,
+      };
+
+      if (params.gainValue !== undefined) {
+        const gainValue =
+          params.gainValue <= 50
+            ? params.gainValue / 50
+            : 1 + (params.gainValue - 50) * 0.06;
+
+        const gain = new Tone.Gain(gainValue);
+        newBundleParams.outputGain = {
+          ...newBundleParams.outputGain,
+          gainValue: params.gainValue,
+          gainNode: gain,
+        };
+      }
+
+      if (params.dryWetValue !== undefined) {
+        const dryWet = new Tone.CrossFade(params.dryWetValue / 100);
+        newBundleParams.dryWet = {
+          ...newBundleParams.dryWet,
+          dryWetValue: params.dryWetValue,
+          dryWetNode: dryWet,
+        };
+      }
+
       newBundleArray[bundleID] = {
         ...bundle,
         bundleParams: newBundleParams,

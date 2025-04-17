@@ -3,7 +3,6 @@ import { Plus } from "lucide-react";
 import { useFXStore } from "@data/store/FXStore.ts";
 
 export const BundleCard_Blank: React.FC = () => {
-  const bundleArray = useFXStore((state) => state.bundleArray);
   const addBundle = useFXStore((state) => state.addBundle);
 
   function generateRandomBundleName(length = 10) {
@@ -16,19 +15,8 @@ export const BundleCard_Blank: React.FC = () => {
     return result;
   }
 
-  const addNewBundle = () => {
-    const newBundle = {
-      bundleID: Number(bundleArray.length),
-      bundleName: "Bundle_" + String(bundleArray.length + 1),
-      bundleDesc: "",
-      bundleIsSelected: false,
-      bundleParams: { fxs: [], outputGain: null, dryWet: null },
-    };
-    addBundle(newBundle);
-  };
-
   const handleClick: React.MouseEventHandler<HTMLDivElement> = () => {
-    addNewBundle();
+    addBundle();
   };
 
   return (
