@@ -316,7 +316,7 @@ export const useFXStore = create<FXStore>((set, get) => ({
       Object.entries(params).map(([key, param]) => [key, param.value])
     );
     let feedbackDelay: Tone.ToneAudioNode;
-
+    console.log("d");
     if (isEditing) {
       feedbackDelay = new Tone.FeedbackDelay(paramValues);
     } else {
