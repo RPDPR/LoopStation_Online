@@ -231,15 +231,22 @@ export const useFXStore = create<FXStore>((set, get) => ({
     });
   },
 
-  reverb_FX: (bundleID, isEditing, params: FX_ParamsTypes["reverb"]) => {
+  reverb_FX: (
+    bundleID,
+    isEditing,
+    params: Omit<FX_ParamsTypes["reverb"], "id">
+  ) => {
     const bundles = get().bundleArray;
     const bundle = bundles[bundleID];
+    const paramValues = Object.fromEntries(
+      Object.entries(params).map(([key, param]) => [key, param.value])
+    );
     let reverb: Tone.ToneAudioNode;
 
     if (isEditing) {
-      reverb = new Tone.Reverb(params);
+      reverb = new Tone.Reverb(paramValues);
     } else {
-      reverb = new Tone.Reverb(params);
+      reverb = new Tone.Reverb(paramValues);
     }
 
     set((state) => {
@@ -264,16 +271,19 @@ export const useFXStore = create<FXStore>((set, get) => ({
   distortion_FX: (
     bundleID,
     isEditing,
-    params: FX_ParamsTypes["distortion"]
+    params: Omit<FX_ParamsTypes["distortion"], "id">
   ) => {
     const bundles = get().bundleArray;
     const bundle = bundles[bundleID];
+    const paramValues = Object.fromEntries(
+      Object.entries(params).map(([key, param]) => [key, param.value])
+    );
     let distortion: Tone.ToneAudioNode;
 
     if (isEditing) {
-      distortion = new Tone.Distortion(params);
+      distortion = new Tone.Distortion(paramValues);
     } else {
-      distortion = new Tone.Distortion(params);
+      distortion = new Tone.Distortion(paramValues);
     }
 
     set((state) => {
@@ -298,16 +308,19 @@ export const useFXStore = create<FXStore>((set, get) => ({
   feedbackDelay_FX: (
     bundleID,
     isEditing,
-    params: FX_ParamsTypes["feedbackDelay"]
+    params: Omit<FX_ParamsTypes["feedbackDelay"], "id">
   ) => {
     const bundles = get().bundleArray;
     const bundle = bundles[bundleID];
+    const paramValues = Object.fromEntries(
+      Object.entries(params).map(([key, param]) => [key, param.value])
+    );
     let feedbackDelay: Tone.ToneAudioNode;
 
     if (isEditing) {
-      feedbackDelay = new Tone.FeedbackDelay(params);
+      feedbackDelay = new Tone.FeedbackDelay(paramValues);
     } else {
-      feedbackDelay = new Tone.FeedbackDelay(params);
+      feedbackDelay = new Tone.FeedbackDelay(paramValues);
     }
 
     set((state) => {
