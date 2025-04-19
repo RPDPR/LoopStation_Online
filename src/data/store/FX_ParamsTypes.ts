@@ -1,36 +1,34 @@
-type T_FXParam = {
-  NUMBER: {
-    min: number;
-    max: number;
-    step?: number;
-  };
-  SELECT: {
-    options: string[];
-  };
-};
-type FXParamType = keyof T_FXParam;
-type FXParam<T extends FXParamType, V> = V extends T_FXParam[T] ? V : never;
+interface I_ToneBaseParam<T> {
+  value: T;
+}
+
+type T_ToneNumberParam<T extends { min: number; max: number; step?: number }> =
+  I_ToneBaseParam<number> & {
+    type: "number";
+  } & T & { step: T extends { step: number } ? T["step"] : 0.1 };
+
+type T_ToneStringParam<T extends { options: readonly string[] }> =
+  I_ToneBaseParam<number> & {
+    type: "string";
+  } & T;
 
 type T_Reverb_FX = {
-  decay: FXParam<"NUMBER", { min: 0; max: 1 }>;
-  preDelay: number;
-  wet: number;
+  decay: T_ToneNumberParam<{ min: 0; max: 1 }>;
+  preDelay: T_ToneNumberParam<{ min: 0; max: 1 }>;
 };
 
 type T_Distortion_FX = {
-  distortion: number;
-  oversample: "none" | "2x" | "4x";
-  wet: number;
+  distortion: T_ToneNumberParam<{ min: 0; max: 1 }>;
+  oversample: T_ToneStringParam<{ options: ["none", "2x", "4x"] }>;
 };
-
 type T_FeedbackDelay_FX = {
-  delayTime: number;
-  feedback: number;
-  wet: number;
+  delayTime: T_ToneNumberParam<{ min: 0; max: 1 }>;
+  feedback: T_ToneNumberParam<{ min: 0; max: 1 }>;
+  maxDelay: T_ToneNumberParam<{ min: 0; max: 1 }>;
 };
 
 export type FX_ParamsTypes = {
-  reverb: T_Reverb_FX;
-  distortion: T_Distortion_FX;
-  feedbackDelay: T_FeedbackDelay_FX;
+  reverb: { id: Readonly<"REVERB"> } & T_Reverb_FX;
+  distortion: { id: Readonly<"DISTORTION"> } & T_Distortion_FX;
+  feedbackDelay: { id: Readonly<"FEEDBACKDELAY"> } & T_FeedbackDelay_FX;
 };
