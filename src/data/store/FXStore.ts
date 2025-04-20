@@ -340,22 +340,6 @@ export const useFXStore = create<FXStore>((set, get) => ({
     bundleID,
     params: Partial<Omit<FX_ParamsTypes["feedbackDelay"], "id">>
   ) => {
-<<<<<<< HEAD
-    const bundles = get().bundleArray;
-    const bundle = bundles[bundleID];
-    const paramValues = Object.fromEntries(
-      Object.entries(params).map(([key, param]) => [key, param.value])
-    );
-    let feedbackDelay: Tone.ToneAudioNode;
-    console.log("d");
-    if (isEditing) {
-      feedbackDelay = new Tone.FeedbackDelay(paramValues);
-    } else {
-      feedbackDelay = new Tone.FeedbackDelay(paramValues);
-    }
-
-=======
->>>>>>> production
     set((state) => {
       const newBundleArray = [...state.bundleArray];
       const bundle = newBundleArray[bundleID];
