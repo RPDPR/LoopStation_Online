@@ -276,7 +276,11 @@ export const useFXStore = create<FXStore>((set, get) => ({
       newBundleFXs.push(
         fx
           ? { ...fx, fxNode: reverb }
-          : { fxID: "REVERB", fxIsSelected: false, fxNode: reverb }
+          : ({
+              fxID: "REVERB",
+              fxIsSelected: false,
+              fxNode: reverb,
+            } as Fxs[number])
       );
 
       newBundleArray[bundleID] = {
@@ -316,7 +320,11 @@ export const useFXStore = create<FXStore>((set, get) => ({
       newBundleFXs.push(
         fx
           ? { ...fx, fxNode: distortion }
-          : { fxID: "DISTORTION", fxIsSelected: false, fxNode: distortion }
+          : ({
+              fxID: "DISTORTION",
+              fxIsSelected: false,
+              fxNode: distortion,
+            } as Fxs[number])
       );
 
       newBundleArray[bundleID] = {
@@ -356,11 +364,11 @@ export const useFXStore = create<FXStore>((set, get) => ({
       newBundleFXs.push(
         fx
           ? { ...fx, fxNode: feedbackDelay }
-          : {
+          : ({
               fxID: "FEEDBACKDELAY",
               fxIsSelected: false,
               fxNode: feedbackDelay,
-            }
+            } as Fxs[number])
       );
 
       newBundleArray[bundleID] = {
