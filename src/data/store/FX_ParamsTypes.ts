@@ -2,33 +2,43 @@ interface I_ToneBaseParam<T> {
   value: T;
 }
 
-type T_ToneNumberParam<T extends { min: number; max: number; step?: number }> =
-  I_ToneBaseParam<number> & {
-    type: "number";
-  } & T & { step: T extends { step: number } ? T["step"] : 0.1 };
+type T_Num<
+  T extends { min: number; max: number; step?: number; default: number }
+> = I_ToneBaseParam<number> & {
+  type: "number";
+} & T & { step: T extends { step: number } ? T["step"] : 0.1 };
 
-type T_ToneStringParam<T extends { options: readonly string[] }> =
-  I_ToneBaseParam<number> & {
+type T_Str<T extends { options: readonly string[]; default: string }> =
+  I_ToneBaseParam<string> & {
     type: "string";
   } & T;
 
 type T_Reverb_FX = {
-  decay: T_ToneNumberParam<{ min: 0; max: 1 }>;
-  preDelay: T_ToneNumberParam<{ min: 0; max: 1 }>;
+  readonly id: "REVERB";
+
+  // PARAMS /////
+  decay: T_Num<{ min: 0; max: 1; default: 0.5 }>;
+  preDelay: T_Num<{ min: 0; max: 1; default: 0.5 }>;
 };
 
 type T_Distortion_FX = {
-  distortion: T_ToneNumberParam<{ min: 0; max: 1 }>;
-  oversample: T_ToneStringParam<{ options: ["none", "2x", "4x"] }>;
+  readonly id: "DISTORTION";
+
+  // PARAMS /////
+  distortion: T_Num<{ min: 0; max: 1; default: 0.5 }>;
+  oversample: T_Str<{ options: ["none", "2x", "4x"]; default: "none" }>;
 };
 type T_FeedbackDelay_FX = {
-  delayTime: T_ToneNumberParam<{ min: 0; max: 1 }>;
-  feedback: T_ToneNumberParam<{ min: 0; max: 1 }>;
-  maxDelay: T_ToneNumberParam<{ min: 0; max: 1 }>;
+  readonly id: "FEEDBACKDELAY";
+
+  // PARAMS /////
+  delayTime: T_Num<{ min: 0; max: 1; default: 0.5 }>;
+  feedback: T_Num<{ min: 0; max: 1; default: 0.5 }>;
+  maxDelay: T_Num<{ min: 0; max: 1; default: 0.5 }>;
 };
 
 export type FX_ParamsTypes = {
-  reverb: { id: Readonly<"REVERB"> } & T_Reverb_FX;
-  distortion: { id: Readonly<"DISTORTION"> } & T_Distortion_FX;
-  feedbackDelay: { id: Readonly<"FEEDBACKDELAY"> } & T_FeedbackDelay_FX;
+  reverb: T_Reverb_FX;
+  distortion: T_Distortion_FX;
+  feedbackDelay: T_FeedbackDelay_FX;
 };
