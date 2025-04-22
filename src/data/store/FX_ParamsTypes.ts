@@ -15,23 +15,23 @@ type T_Str<T extends { options: readonly string[]; default: string }> =
 
 type T_Reverb_FX = {
   readonly id: "REVERB";
+  readonly name: "Reverb";
 
-  // PARAMS /////
   decay: T_Num<{ min: 0; max: 1; default: 0.5 }>;
   preDelay: T_Num<{ min: 0; max: 1; default: 0.5 }>;
 };
 
 type T_Distortion_FX = {
   readonly id: "DISTORTION";
+  readonly name: "Distortion";
 
-  // PARAMS /////
   distortion: T_Num<{ min: 0; max: 1; default: 0.5 }>;
   oversample: T_Str<{ options: ["none", "2x", "4x"]; default: "none" }>;
 };
 type T_FeedbackDelay_FX = {
   readonly id: "FEEDBACKDELAY";
+  readonly name: "FeedbackDelay";
 
-  // PARAMS /////
   delayTime: T_Num<{ min: 0; max: 1; default: 0.5 }>;
   feedback: T_Num<{ min: 0; max: 1; default: 0.5 }>;
   maxDelay: T_Num<{ min: 0; max: 1; default: 0.5 }>;
@@ -42,3 +42,16 @@ export type FX_ParamsTypes = {
   distortion: T_Distortion_FX;
   feedbackDelay: T_FeedbackDelay_FX;
 };
+
+type T_FX_PACK = {
+  [K in keyof FX_ParamsTypes]: {
+    id: FX_ParamsTypes[K]["id"];
+    name: FX_ParamsTypes[K]["name"];
+  };
+};
+export const FX_PACK: T_FX_PACK = {
+  reverb: { id: "REVERB", name: "Reverb" },
+  distortion: { id: "DISTORTION", name: "Distortion" },
+  feedbackDelay: { id: "FEEDBACKDELAY", name: "FeedbackDelay" },
+};
+export const FX_PACK_IDs = Object.values(FX_PACK).map((fx) => fx.id);

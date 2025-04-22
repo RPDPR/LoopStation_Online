@@ -7,6 +7,7 @@ import {
   BundleParams,
   Fxs,
   FxID,
+  FxName,
   FxIsSelected,
   FxNode,
   OutputGain,
@@ -37,6 +38,7 @@ export interface Bundle {
   bundleParams: {
     fxs: {
       fxID: FX_ParamsTypes[keyof FX_ParamsTypes]["id"];
+      fxName: FX_ParamsTypes[keyof FX_ParamsTypes]["name"] | null;
       fxIsSelected: boolean;
       fxNode: Tone.ToneAudioNode | null;
     }[];
@@ -66,7 +68,7 @@ interface FXStore {
   // BUNDLE EDITING /////
 
   // FX EDITING /////
-  addFX: (bundleID: BundleID, fxID: FxID) => void;
+  addFX: (bundleID: BundleID, fxID: FxID, fxName: FxName) => void;
   setFXSelection: (
     bundleID: BundleID,
     fxID: FxID,
@@ -77,15 +79,15 @@ interface FXStore {
   // FX /////
   reverb_FX: (
     bundleID: BundleID,
-    FX_Params: Omit<FX_ParamsTypes["reverb"], "id">
+    FX_Params: Omit<FX_ParamsTypes["reverb"], "id" | "name">
   ) => void;
   distortion_FX: (
     bundleID: BundleID,
-    FX_Params: Omit<FX_ParamsTypes["distortion"], "id">
+    FX_Params: Omit<FX_ParamsTypes["distortion"], "id" | "name">
   ) => void;
   feedbackDelay_FX: (
     bundleID: BundleID,
-    FX_Params: Omit<FX_ParamsTypes["feedbackDelay"], "id">
+    FX_Params: Omit<FX_ParamsTypes["feedbackDelay"], "id" | "name">
   ) => void;
   // FX /////
 }
@@ -201,7 +203,7 @@ export const useFXStore = create<FXStore>((set, get) => ({
       return { bundleArray: newBundleArray };
     });
   },
-  addFX: (bundleID: BundleID, fxID: FxID) => {
+  addFX: (bundleID: BundleID, fxID: FxID, fxName: FxName) => {
     set((state) => {
       const newBundleArray = [...state.bundleArray];
       const bundle = newBundleArray[bundleID];
@@ -211,6 +213,7 @@ export const useFXStore = create<FXStore>((set, get) => ({
 
       const newFxObject: Fxs[number] = {
         fxID: fxID,
+        fxName: fxName || null,
         fxIsSelected: false,
         fxNode: null,
       };
@@ -250,13 +253,13 @@ export const useFXStore = create<FXStore>((set, get) => ({
   },
 
   reverb_FX: (
-    bundleID,
-    params: Partial<Omit<FX_ParamsTypes["reverb"], "id">>
+    bundleID: BundleID,
+    params: Partial<Omit<FX_ParamsTypes["reverb"], "id" | "name">>
   ) => {
     set((state) => {
       const newBundleArray = [...state.bundleArray];
       const bundle = newBundleArray[bundleID];
-      const newBundleFXs = [...bundle.bundleParams.fxs];
+      const newBundleFXs: Fxs = [...bundle.bundleParams.fxs];
       const fx = newBundleFXs.find(
         (fx) => fx.fxID === "REVERB" && fx.fxNode != null
       );
@@ -278,6 +281,7 @@ export const useFXStore = create<FXStore>((set, get) => ({
           ? { ...fx, fxNode: reverb }
           : ({
               fxID: "REVERB",
+              fxName: "Reverb",
               fxIsSelected: false,
               fxNode: reverb,
             } as Fxs[number])
@@ -293,13 +297,13 @@ export const useFXStore = create<FXStore>((set, get) => ({
   },
 
   distortion_FX: (
-    bundleID,
-    params: Partial<Omit<FX_ParamsTypes["distortion"], "id">>
+    bundleID: BundleID,
+    params: Partial<Omit<FX_ParamsTypes["distortion"], "id" | "name">>
   ) => {
     set((state) => {
       const newBundleArray = [...state.bundleArray];
       const bundle = newBundleArray[bundleID];
-      const newBundleFXs = [...bundle.bundleParams.fxs];
+      const newBundleFXs: Fxs = [...bundle.bundleParams.fxs];
       const fx = newBundleFXs.find(
         (fx) => fx.fxID === "DISTORTION" && fx.fxNode != null
       );
@@ -322,6 +326,7 @@ export const useFXStore = create<FXStore>((set, get) => ({
           ? { ...fx, fxNode: distortion }
           : ({
               fxID: "DISTORTION",
+              fxName: "Distortion",
               fxIsSelected: false,
               fxNode: distortion,
             } as Fxs[number])
@@ -337,13 +342,13 @@ export const useFXStore = create<FXStore>((set, get) => ({
   },
 
   feedbackDelay_FX: (
-    bundleID,
-    params: Partial<Omit<FX_ParamsTypes["feedbackDelay"], "id">>
+    bundleID: BundleID,
+    params: Partial<Omit<FX_ParamsTypes["feedbackDelay"], "id" | "name">>
   ) => {
     set((state) => {
       const newBundleArray = [...state.bundleArray];
       const bundle = newBundleArray[bundleID];
-      const newBundleFXs = [...bundle.bundleParams.fxs];
+      const newBundleFXs: Fxs = [...bundle.bundleParams.fxs];
       const fx = newBundleFXs.find(
         (fx) => fx.fxID === "FEEDBACKDELAY" && fx.fxNode != null
       );
@@ -366,6 +371,7 @@ export const useFXStore = create<FXStore>((set, get) => ({
           ? { ...fx, fxNode: feedbackDelay }
           : ({
               fxID: "FEEDBACKDELAY",
+              fxName: "FeedbackDelay",
               fxIsSelected: false,
               fxNode: feedbackDelay,
             } as Fxs[number])

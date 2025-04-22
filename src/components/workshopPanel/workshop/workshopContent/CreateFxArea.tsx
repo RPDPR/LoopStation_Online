@@ -1,4 +1,4 @@
-import { fxNames } from "@data/store/FXStore.ts";
+import { FX_PACK, FX_PACK_IDs } from "@data/store/FX_ParamsTypes.ts";
 import { useFXStore } from "@data/store/FXStore.ts";
 import { FXCard_Blank } from "./createFxContent/FXCard_Blank.tsx";
 import { FXCard } from "./createFxContent/FXCard.tsx";
@@ -14,20 +14,32 @@ export const CreateFxArea: React.FC = () => {
   return (
     <div className="bg-[#353535] shadow-[0_0_10px_rgba(20,20,20,0.5)] inset-shadow-[0_0_10px_rgba(20,20,20,0.2)] rounded-2xl h-full overflow-hidden flex flex-row col-span-1 pl-2 gap-x-2 pr-2 py-2">
       <div className="w-full h-full bg-[#353535] border-2 border-black/10 rounded-lg inset-shadow-[0_0_20px_rgba(20,20,20,0.3)] overflow-y-auto [&::-webkit-scrollbar]:bg-transparent [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-thumb]:bg-[#757575] [&::-webkit-scrollbar-thumb]:rounded-lg py-1 pr-1 pl-1 basis-1/2 relative z-10">
-        {Object.values(fxNames).map((fxName) => (
-          <FXCard_Blank key={`blank-${fxName}`} fxName={fxName} />
-        ))}
+        {Object.values(FX_PACK)
+          .sort((a, b) => FX_PACK_IDs.indexOf(a.id) - FX_PACK_IDs.indexOf(b.id))
+          .map((fx) => (
+            <FXCard_Blank
+              key={`blank-${fx.id}`}
+              fxID={fx.id}
+              fxName={fx.name}
+            />
+          ))}
       </div>
       <div className="w-full h-full bg-[#353535] border-2 border-black/10 rounded-lg inset-shadow-[0_0_20px_rgba(20,20,20,0.3)] overflow-y-auto [&::-webkit-scrollbar]:bg-transparent [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-thumb]:bg-[#757575] [&::-webkit-scrollbar-thumb]:rounded-lg py-1 pr-1 pl-1 basis-1/2 relative z-10">
         {selectedBundle ? (
           selectedBundle.bundleParams.fxs.length ? (
-            selectedBundle.bundleParams.fxs.map((fx) => (
-              <FXCard
-                key={`bundle-${selectedBundle.bundleID}-${fx.fxID}`}
-                bundleID={selectedBundle.bundleID}
-                fxID={fx.fxID}
-              />
-            ))
+            selectedBundle.bundleParams.fxs
+              .sort(
+                (a, b) =>
+                  FX_PACK_IDs.indexOf(a.fxID) - FX_PACK_IDs.indexOf(b.fxID)
+              )
+              .map((fx) => (
+                <FXCard
+                  key={`bundle-${selectedBundle.bundleID}-${fx.fxID}`}
+                  bundleID={selectedBundle.bundleID}
+                  fxID={fx.fxID}
+                  fxName={fx.fxName}
+                />
+              ))
           ) : (
             <div className="w-full h-full overflow-hidden flex flex-row justify-center items-center text-center text-sm px-3">
               {fillerText_1}
