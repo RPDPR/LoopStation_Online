@@ -3,38 +3,51 @@ interface I_ToneBaseParam<T> {
 }
 
 type T_Num<
-  T extends { min: number; max: number; step?: number; default: number }
+  T extends {
+    min: number;
+    max: number;
+    step?: number;
+    default: number;
+  }
 > = I_ToneBaseParam<number> & {
   type: "number";
 } & T & { step: T extends { step: number } ? T["step"] : 0.1 };
 
-type T_Str<T extends { options: readonly string[]; default: string }> =
-  I_ToneBaseParam<string> & {
-    type: "string";
-  } & T;
+type T_Str<
+  T extends {
+    options: readonly string[];
+    default: T["options"][number];
+  }
+> = I_ToneBaseParam<T["options"][number]> & {
+  type: "string";
+} & T;
 
 type T_Reverb_FX = {
   readonly id: "REVERB";
   readonly name: "Reverb";
 
-  decay: T_Num<{ min: 0; max: 1; default: 0.5 }>;
-  preDelay: T_Num<{ min: 0; max: 1; default: 0.5 }>;
+  decay: T_Num<{ min: 0; max: 1; default: 0.5 }> & { name: "Decay" };
+  preDelay: T_Num<{ min: 0; max: 1; default: 0.5 }> & { name: "PreDelay" };
 };
 
 type T_Distortion_FX = {
   readonly id: "DISTORTION";
   readonly name: "Distortion";
 
-  distortion: T_Num<{ min: 0; max: 1; default: 0.5 }>;
-  oversample: T_Str<{ options: ["none", "2x", "4x"]; default: "none" }>;
+  distortion: T_Num<{ min: 0; max: 1; default: 0.5 }> & { name: "Distortion" };
+  oversample: T_Str<{
+    options: ["none", "2x", "4x"];
+    default: "none";
+  }> & { name: "Oversample" };
 };
+
 type T_FeedbackDelay_FX = {
   readonly id: "FEEDBACKDELAY";
   readonly name: "FeedbackDelay";
 
-  delayTime: T_Num<{ min: 0; max: 1; default: 0.5 }>;
-  feedback: T_Num<{ min: 0; max: 1; default: 0.5 }>;
-  maxDelay: T_Num<{ min: 0; max: 1; default: 0.5 }>;
+  delayTime: T_Num<{ min: 0; max: 1; default: 0.5 }> & { name: "DelayTime" };
+  feedback: T_Num<{ min: 0; max: 1; default: 0.5 }> & { name: "Feedback" };
+  maxDelay: T_Num<{ min: 0; max: 1; default: 0.5 }> & { name: "MaxDelay" };
 };
 
 export type FX_ParamsTypes = {

@@ -12,6 +12,7 @@ import {
   FxNode,
   OutputGain,
   DryWet,
+  T_FX_Node,
 } from "@data/store/FXStoreTypes.ts";
 import { FX_ParamsTypes } from "@data/store/FX_ParamsTypes.ts";
 
@@ -74,20 +75,22 @@ interface FXStore {
     fxID: FxID,
     isSelected: FxIsSelected
   ) => void;
+  updateFXParams: (
+    bundleID: BundleID,
+    fxID: FxID,
+    FX_Params: T_FX_Node[keyof T_FX_Node]
+  ) => void;
   // FX EDITING /////
 
   // FX /////
-  reverb_FX: (
-    bundleID: BundleID,
-    FX_Params: Omit<FX_ParamsTypes["reverb"], "id" | "name">
-  ) => void;
+  reverb_FX: (bundleID: BundleID, FX_Params: T_FX_Node["reverb"]) => void;
   distortion_FX: (
     bundleID: BundleID,
-    FX_Params: Omit<FX_ParamsTypes["distortion"], "id" | "name">
+    FX_Params: T_FX_Node["distortion"]
   ) => void;
   feedbackDelay_FX: (
     bundleID: BundleID,
-    FX_Params: Omit<FX_ParamsTypes["feedbackDelay"], "id" | "name">
+    FX_Params: T_FX_Node["feedbackDelay"]
   ) => void;
   // FX /////
 }
@@ -252,10 +255,30 @@ export const useFXStore = create<FXStore>((set, get) => ({
     });
   },
 
-  reverb_FX: (
+  updateFXParams(
     bundleID: BundleID,
-    params: Partial<Omit<FX_ParamsTypes["reverb"], "id" | "name">>
-  ) => {
+    fxID: FxID,
+    FX_Params: T_FX_Node[keyof T_FX_Node]
+  ) {
+    switch (fxID) {
+      case "REVERB":
+        get().reverb_FX(bundleID, FX_Params as T_FX_Node["reverb"]);
+        break;
+      case "DISTORTION":
+        get().distortion_FX(bundleID, FX_Params as T_FX_Node["distortion"]);
+        break;
+      case "FEEDBACKDELAY":
+        get().feedbackDelay_FX(
+          bundleID,
+          FX_Params as T_FX_Node["feedbackDelay"]
+        );
+        break;
+      default:
+        throw new Error(`Unsupported FX ID: ${fxID}`);
+    }
+  },
+
+  reverb_FX: (bundleID: BundleID, params: T_FX_Node["reverb"]) => {
     set((state) => {
       const newBundleArray = [...state.bundleArray];
       const bundle = newBundleArray[bundleID];
@@ -263,9 +286,7 @@ export const useFXStore = create<FXStore>((set, get) => ({
       const fx = newBundleFXs.find(
         (fx) => fx.fxID === "REVERB" && fx.fxNode != null
       );
-      const newFxParams = Object.fromEntries(
-        Object.entries(params).map(([key, param]) => [key, param.value])
-      );
+      const newFxParams = { ...params };
 
       const reverb = new Tone.Reverb(
         fx && fx.fxNode
@@ -296,10 +317,7 @@ export const useFXStore = create<FXStore>((set, get) => ({
     });
   },
 
-  distortion_FX: (
-    bundleID: BundleID,
-    params: Partial<Omit<FX_ParamsTypes["distortion"], "id" | "name">>
-  ) => {
+  distortion_FX: (bundleID: BundleID, params: T_FX_Node["distortion"]) => {
     set((state) => {
       const newBundleArray = [...state.bundleArray];
       const bundle = newBundleArray[bundleID];
@@ -308,9 +326,7 @@ export const useFXStore = create<FXStore>((set, get) => ({
         (fx) => fx.fxID === "DISTORTION" && fx.fxNode != null
       );
 
-      const newFxParams = Object.fromEntries(
-        Object.entries(params).map(([key, param]) => [key, param.value])
-      );
+      const newFxParams = { ...params };
 
       const distortion = new Tone.Distortion(
         fx && fx.fxNode
@@ -343,7 +359,7 @@ export const useFXStore = create<FXStore>((set, get) => ({
 
   feedbackDelay_FX: (
     bundleID: BundleID,
-    params: Partial<Omit<FX_ParamsTypes["feedbackDelay"], "id" | "name">>
+    params: T_FX_Node["feedbackDelay"]
   ) => {
     set((state) => {
       const newBundleArray = [...state.bundleArray];
@@ -353,9 +369,7 @@ export const useFXStore = create<FXStore>((set, get) => ({
         (fx) => fx.fxID === "FEEDBACKDELAY" && fx.fxNode != null
       );
 
-      const newFxParams = Object.fromEntries(
-        Object.entries(params).map(([key, param]) => [key, param.value])
-      );
+      const newFxParams = { ...params };
 
       const feedbackDelay = new Tone.FeedbackDelay(
         fx && fx.fxNode
