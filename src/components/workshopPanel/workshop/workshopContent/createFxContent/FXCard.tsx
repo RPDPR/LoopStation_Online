@@ -1,4 +1,4 @@
-import React from "react";
+import { FC } from "react";
 import { useFXStore } from "@data/store/FXStore.ts";
 import { BundleID, FxID, FxName } from "@data/store/FXStoreTypes.ts";
 
@@ -8,7 +8,7 @@ type T_FXCard = {
   fxName?: FxName;
 };
 
-export const FXCard: React.FC<T_FXCard> = ({
+export const FXCard: FC<T_FXCard> = ({
   bundleID: bundleID,
   fxID: fxID,
   fxName: fxName,
@@ -21,9 +21,7 @@ export const FXCard: React.FC<T_FXCard> = ({
 
   const handleClick: React.MouseEventHandler<HTMLDivElement> = () => {
     if (bundle && fx) {
-      bundle.bundleParams.fxs.forEach((fx) => {
-        setFXSelection(bundle.bundleID, fx.fxID, fx.fxID === fxID);
-      });
+      setFXSelection(bundle.bundleID, fx.fxID, true);
     }
   };
 

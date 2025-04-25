@@ -237,16 +237,16 @@ export const useFXStore = create<FXStore>((set, get) => ({
     set((state) => {
       const newBundleArray = [...state.bundleArray];
       const bundle = newBundleArray[bundleID];
-      const fxIndex = bundle.bundleParams.fxs.findIndex(
-        (fx) => fx.fxID === fxID
-      );
 
-      if (fxIndex) {
-        bundle.bundleParams.fxs[fxIndex] = {
-          ...bundle.bundleParams.fxs[fxIndex],
-          fxIsSelected: isSelected,
-        };
-      }
+      const updatedFXs = bundle.bundleParams.fxs.map((fx) => ({
+        ...fx,
+        fxIsSelected: isSelected ? fx.fxID === fxID : false,
+      }));
+
+      bundle.bundleParams = {
+        ...bundle.bundleParams,
+        fxs: updatedFXs,
+      };
 
       newBundleArray[bundleID] = {
         ...bundle,

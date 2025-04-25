@@ -1,7 +1,8 @@
+import { FC } from "react";
 import { TuningFX_Params } from "./TuningFXContent/TuningFX_Params.tsx";
 import { useFXStore } from "@data/store/FXStore.ts";
 
-export const TuningFX: React.FC = () => {
+export const TuningFX: FC = () => {
   const bundleArray = useFXStore((state) => state.bundleArray);
 
   const fillerText_1 = "There is no FX here";
@@ -20,7 +21,7 @@ export const TuningFX: React.FC = () => {
           {fillerText_2}
         </div>
       ) : (
-        <div className="w-full h-full grid grid-cols-2 auto-rows-max gap-2 overflow-y-auto [&::-webkit-scrollbar]:bg-transparent [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-thumb]:bg-[#757575] [&::-webkit-scrollbar-thumb]:rounded-lg py-1 pr-1 pl-1">
+        <div className="w-full h-full overflow-hidden">
           <TuningFX_Params bundleID={selectedBundle.bundleID} fxID={fx.fxID} />
         </div>
       )}
