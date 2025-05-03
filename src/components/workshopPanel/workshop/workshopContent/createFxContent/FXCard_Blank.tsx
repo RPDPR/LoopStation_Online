@@ -12,12 +12,14 @@ export const FXCard_Blank: React.FC<T_FXCard_Blank> = ({
   fxName: fxName,
 }) => {
   const addFX = useFXStore((state) => state.addFX);
+  const updateFXParams = useFXStore((state) => state.updateFXParams);
   const bundleArray = useFXStore((state) => state.bundleArray);
   const bundle = bundleArray.find((bdl) => bdl.bundleIsSelected);
 
   const handleClick: React.MouseEventHandler<HTMLDivElement> = () => {
     if (bundle) {
       addFX(bundle.bundleID, fxID, fxName ?? null);
+      updateFXParams(bundle.bundleID, fxID, {});
     }
   };
 

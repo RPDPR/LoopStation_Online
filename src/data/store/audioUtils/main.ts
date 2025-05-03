@@ -1,4 +1,40 @@
 import * as Tone from "tone";
+import { FX_PARAMS_DEFAULTS } from "../FX_ParamsTypes";
+
+export const FXUtils = {
+  splitFXParams<K extends keyof typeof FX_PARAMS_DEFAULTS>(
+    fxParams: (typeof FX_PARAMS_DEFAULTS)[K]
+  ) {
+    const entries = Object.entries(fxParams) as [
+      keyof typeof fxParams,
+      { value: unknown; isMain?: boolean }
+    ][];
+    const mainEntries = entries.filter(([, val]) => val.isMain);
+    const sideEntries = entries.filter(([, val]) => !val.isMain);
+
+    const mainParams = Object.fromEntries(
+      mainEntries.map(([key, val]) => [key, val.value])
+    ) as {
+      [P in keyof typeof fxParams as (typeof fxParams)[P] extends {
+        isMain: true;
+      }
+        ? P
+        : never]: (typeof fxParams)[P]["value"];
+    };
+
+    const sideParams = Object.fromEntries(
+      sideEntries.map(([key, val]) => [key, val.value])
+    ) as {
+      [P in keyof typeof fxParams as (typeof fxParams)[P] extends {
+        isMain: true;
+      }
+        ? never
+        : P]: (typeof fxParams)[P]["value"];
+    };
+
+    return { mainParams, sideParams };
+  },
+};
 
 export const loopUtils = {
   mixBuffers: (

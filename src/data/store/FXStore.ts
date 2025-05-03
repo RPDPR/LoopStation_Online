@@ -15,6 +15,8 @@ import {
   T_FX_Node,
 } from "@data/store/FXStoreTypes.ts";
 import { FX_ParamsTypes } from "@data/store/FX_ParamsTypes.ts";
+import { FX_PARAMS_DEFAULTS } from "@data/store/FX_ParamsTypes.ts";
+import { FXUtils } from "@data/store/audioUtils/main.ts";
 
 // TYPES DEFINITION /////
 type T_bundleOutputGain = {
@@ -131,7 +133,6 @@ export const useFXStore = create<FXStore>((set, get) => ({
       return { bundleArray: newBundleArray };
     });
   },
-
   setBundleSelection: (bundleID: BundleID, isSelected: BundleIsSelected) => {
     set((state) => {
       const newBundleArray = [...state.bundleArray];
@@ -146,7 +147,6 @@ export const useFXStore = create<FXStore>((set, get) => ({
       return { bundleArray: newBundleArray };
     });
   },
-
   setBundleName: (bundleID: BundleID, bundleName: BundleName) => {
     set((state) => {
       const newBundleArray = [...state.bundleArray];
@@ -161,7 +161,6 @@ export const useFXStore = create<FXStore>((set, get) => ({
       return { bundleArray: newBundleArray };
     });
   },
-
   setBundleParams: (
     bundleID: BundleID,
     params: {
@@ -206,6 +205,7 @@ export const useFXStore = create<FXStore>((set, get) => ({
       return { bundleArray: newBundleArray };
     });
   },
+
   addFX: (bundleID: BundleID, fxID: FxID, fxName: FxName) => {
     set((state) => {
       const newBundleArray = [...state.bundleArray];
@@ -226,6 +226,7 @@ export const useFXStore = create<FXStore>((set, get) => ({
       newBundleArray[bundleID] = {
         ...bundle,
       };
+
       return { bundleArray: newBundleArray };
     });
   },
@@ -251,14 +252,14 @@ export const useFXStore = create<FXStore>((set, get) => ({
       newBundleArray[bundleID] = {
         ...bundle,
       };
+
       return { bundleArray: newBundleArray };
     });
   },
-
   updateFXParams(
     bundleID: BundleID,
     fxID: FxID,
-    FX_Params: T_FX_Node[keyof T_FX_Node]
+    FX_Params: T_FX_Node[keyof T_FX_Node] = {} as T_FX_Node[keyof T_FX_Node]
   ) {
     switch (fxID) {
       case "REVERB":
@@ -278,35 +279,41 @@ export const useFXStore = create<FXStore>((set, get) => ({
     }
   },
 
-  reverb_FX: (bundleID: BundleID, params: T_FX_Node["reverb"]) => {
+  reverb_FX: (bundleID: BundleID, params?: T_FX_Node["reverb"]) => {
     set((state) => {
       const newBundleArray = [...state.bundleArray];
       const bundle = newBundleArray[bundleID];
-      const newBundleFXs: Fxs = [...bundle.bundleParams.fxs];
-      const fx = newBundleFXs.find(
-        (fx) => fx.fxID === "REVERB" && fx.fxNode != null
-      );
-      const newFxParams = { ...params };
+      const newBundleFXs = [...bundle.bundleParams.fxs];
 
-      const reverb = new Tone.Reverb(
-        fx && fx.fxNode
-          ? {
-              ...fx.fxNode.get(),
-              ...newFxParams,
-            }
-          : { ...newFxParams }
+      const fxIndex = newBundleFXs.findIndex((fx) => fx.fxID === "REVERB");
+      const fx = newBundleFXs[fxIndex];
+
+      const { mainParams, sideParams } = FXUtils.splitFXParams(
+        FX_PARAMS_DEFAULTS.reverb
       );
 
-      newBundleFXs.push(
-        fx
-          ? { ...fx, fxNode: reverb }
-          : ({
-              fxID: "REVERB",
-              fxName: "Reverb",
-              fxIsSelected: false,
-              fxNode: reverb,
-            } as Fxs[number])
-      );
+      const reverb = new Tone.Reverb({
+        ...mainParams,
+        ...params,
+      });
+
+      reverb.set({
+        ...sideParams,
+        ...params,
+      });
+
+      const newFXObject: Fxs[number] = {
+        fxID: fx?.fxID ?? "REVERB",
+        fxName: fx?.fxName ?? "Reverb",
+        fxIsSelected: fx?.fxIsSelected ?? false,
+        fxNode: reverb,
+      };
+
+      if (fxIndex !== -1) {
+        newBundleFXs[fxIndex] = newFXObject;
+      } else {
+        newBundleFXs.push(newFXObject);
+      }
 
       newBundleArray[bundleID] = {
         ...bundle,
@@ -322,31 +329,36 @@ export const useFXStore = create<FXStore>((set, get) => ({
       const newBundleArray = [...state.bundleArray];
       const bundle = newBundleArray[bundleID];
       const newBundleFXs: Fxs = [...bundle.bundleParams.fxs];
-      const fx = newBundleFXs.find(
-        (fx) => fx.fxID === "DISTORTION" && fx.fxNode != null
+
+      const fxIndex = newBundleFXs.findIndex((fx) => fx.fxID === "DISTORTION");
+      const fx = newBundleFXs[fxIndex];
+
+      const { mainParams, sideParams } = FXUtils.splitFXParams(
+        FX_PARAMS_DEFAULTS.distortion
       );
 
-      const newFxParams = { ...params };
+      const distortion = new Tone.Distortion({
+        ...mainParams,
+        ...params,
+      });
 
-      const distortion = new Tone.Distortion(
-        fx && fx.fxNode
-          ? {
-              ...fx.fxNode.get(),
-              ...newFxParams,
-            }
-          : { ...newFxParams }
-      );
+      distortion.set({
+        ...sideParams,
+        ...params,
+      });
 
-      newBundleFXs.push(
-        fx
-          ? { ...fx, fxNode: distortion }
-          : ({
-              fxID: "DISTORTION",
-              fxName: "Distortion",
-              fxIsSelected: false,
-              fxNode: distortion,
-            } as Fxs[number])
-      );
+      const newFXObject: Fxs[number] = {
+        fxID: fx?.fxID ?? "DISTORTION",
+        fxName: fx?.fxName ?? "Distortion",
+        fxIsSelected: fx?.fxIsSelected ?? false,
+        fxNode: distortion,
+      };
+
+      if (fxIndex !== -1) {
+        newBundleFXs[fxIndex] = newFXObject;
+      } else {
+        newBundleFXs.push(newFXObject);
+      }
 
       newBundleArray[bundleID] = {
         ...bundle,
@@ -365,31 +377,38 @@ export const useFXStore = create<FXStore>((set, get) => ({
       const newBundleArray = [...state.bundleArray];
       const bundle = newBundleArray[bundleID];
       const newBundleFXs: Fxs = [...bundle.bundleParams.fxs];
-      const fx = newBundleFXs.find(
-        (fx) => fx.fxID === "FEEDBACKDELAY" && fx.fxNode != null
+
+      const fxIndex = newBundleFXs.findIndex(
+        (fx) => fx.fxID === "FEEDBACKDELAY"
+      );
+      const fx = newBundleFXs[fxIndex];
+
+      const { mainParams, sideParams } = FXUtils.splitFXParams(
+        FX_PARAMS_DEFAULTS.feedbackDelay
       );
 
-      const newFxParams = { ...params };
+      const feedbackDelay = new Tone.FeedbackDelay({
+        ...mainParams,
+        ...params,
+      });
 
-      const feedbackDelay = new Tone.FeedbackDelay(
-        fx && fx.fxNode
-          ? {
-              ...fx.fxNode.get(),
-              ...newFxParams,
-            }
-          : { ...newFxParams }
-      );
+      feedbackDelay.set({
+        ...sideParams,
+        ...params,
+      });
 
-      newBundleFXs.push(
-        fx
-          ? { ...fx, fxNode: feedbackDelay }
-          : ({
-              fxID: "FEEDBACKDELAY",
-              fxName: "FeedbackDelay",
-              fxIsSelected: false,
-              fxNode: feedbackDelay,
-            } as Fxs[number])
-      );
+      const newFXObject: Fxs[number] = {
+        fxID: fx?.fxID ?? "FEEDBACKDELAY",
+        fxName: fx?.fxName ?? "FeedbackDelay",
+        fxIsSelected: fx?.fxIsSelected ?? false,
+        fxNode: feedbackDelay,
+      };
+
+      if (fxIndex !== -1) {
+        newBundleFXs[fxIndex] = newFXObject;
+      } else {
+        newBundleFXs.push(newFXObject);
+      }
 
       newBundleArray[bundleID] = {
         ...bundle,

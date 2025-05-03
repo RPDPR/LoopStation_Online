@@ -1,4 +1,4 @@
-import { FC } from "react";
+import { FC, MouseEventHandler } from "react";
 import { useFXStore } from "@data/store/FXStore.ts";
 import { BundleID, FxID } from "@data/store/FXStoreTypes.ts";
 
@@ -14,15 +14,27 @@ export const TuningFX_Params: FC<T_TuningFX_Params> = ({ bundleID, fxID }) => {
   const fx = bundle.bundleParams.fxs.find((fx) => fx.fxID === fxID);
   const fxParams = fx?.fxNode?.get() ?? null;
 
+  const handleClick = (e) => {
+    console.log(e?.target?.value);
+  };
+
   return (
     <div className="w-full h-full grid grid-cols-2 auto-rows-max gap-2 overflow-y-auto [&::-webkit-scrollbar]:bg-transparent [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-thumb]:bg-[#757575] [&::-webkit-scrollbar-thumb]:rounded-lg py-1 pr-1 pl-1">
-      {fxParams ? (
-        Object.entries(fxParams).map(([key, value]) => {
-          console.log(key, value);
-          return <div></div>;
+      {fx && fxParams ? (
+        Object.entries(fxParams).map(([paramKey, paramValue]) => {
+          return (
+            <div
+              key={`fxParam-${bundle.bundleID}-${fx.fxID}-${paramKey}`}
+              onClick={handleClick}
+            >
+              {`${paramKey} ${paramValue}`}
+            </div>
+          );
         })
       ) : (
-        <div>d</div>
+        <div>
+          <button>Argh</button>
+        </div>
       )}
 
       {/* <div className="h-10 bg-[#757575] overflow-hidden rounded-lg flex flex-row items-center pl-5">
