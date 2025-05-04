@@ -1,6 +1,8 @@
-import { FC, MouseEventHandler } from "react";
+import { FC } from "react";
 import { useFXStore } from "@data/store/FXStore.ts";
 import { BundleID, FxID } from "@data/store/FXStoreTypes.ts";
+import { FX_PARAMS_DEFAULTS, FX_ID } from "@data/store/FX_ParamsTypes.ts";
+import { T_FX_Node } from "@data/store/FXStoreTypes.ts";
 
 type T_TuningFX_Params = {
   bundleID: BundleID;
@@ -14,19 +16,18 @@ export const TuningFX_Params: FC<T_TuningFX_Params> = ({ bundleID, fxID }) => {
   const fx = bundle.bundleParams.fxs.find((fx) => fx.fxID === fxID);
   const fxParams = fx?.fxNode?.get() ?? null;
 
-  const handleClick = (e) => {
-    console.log(e?.target?.value);
-  };
+  const fxEditableParams = Object.entries(fxParams as T_FX_Node[FX_ID]).filter(
+    ([paramKey]) => {
+      return Object.keys(FX_PARAMS_DEFAULTS[fxID]).includes(paramKey);
+    }
+  );
 
   return (
     <div className="w-full h-full grid grid-cols-2 auto-rows-max gap-2 overflow-y-auto [&::-webkit-scrollbar]:bg-transparent [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-thumb]:bg-[#757575] [&::-webkit-scrollbar-thumb]:rounded-lg py-1 pr-1 pl-1">
       {fx && fxParams ? (
-        Object.entries(fxParams).map(([paramKey, paramValue]) => {
+        fxEditableParams.map(([paramKey, paramValue]) => {
           return (
-            <div
-              key={`fxParam-${bundle.bundleID}-${fx.fxID}-${paramKey}`}
-              onClick={handleClick}
-            >
+            <div key={`fxParam-${bundle.bundleID}-${fx.fxID}-${paramKey}`}>
               {`${paramKey} ${paramValue}`}
             </div>
           );

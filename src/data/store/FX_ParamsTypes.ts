@@ -1,3 +1,5 @@
+import { FxID } from "./FXStoreTypes";
+
 interface I_ToneBaseParam<T> {
   value: T;
   isMain?: boolean;
@@ -51,30 +53,29 @@ type T_FeedbackDelay_FX = {
   wet: T_Num<{ min: 0; max: 1; default: 1 }> & { name: "Wet" };
   delayTime: T_Num<{ min: 0; max: 1; default: 0.5 }> & { name: "DelayTime" };
   feedback: T_Num<{ min: 0; max: 1; default: 0.5 }> & { name: "Feedback" };
-  maxDelay: T_Num<{ min: 0; max: 1; default: 0.5 }> & {
-    name: "MaxDelay";
-    isMain: true;
-  };
 };
 
 // main params /////
+type FX_ParamsTypes_List = T_Reverb_FX | T_Distortion_FX | T_FeedbackDelay_FX;
+
 export type FX_ParamsTypes = {
-  reverb: T_Reverb_FX;
-  distortion: T_Distortion_FX;
-  feedbackDelay: T_FeedbackDelay_FX;
+  [FX in FX_ParamsTypes_List as FX["id"]]: FX;
 };
+
+export type FX_ID = keyof FX_ParamsTypes;
+export type FX_NAME = FX_ParamsTypes[FxID]["name"];
 // main params /////
 
 type T_FX_PACK = {
-  [K in keyof FX_ParamsTypes]: {
+  [K in FX_ID]: {
     id: FX_ParamsTypes[K]["id"];
     name: FX_ParamsTypes[K]["name"];
   };
 };
 export const FX_PACK: T_FX_PACK = {
-  reverb: { id: "REVERB", name: "Reverb" },
-  distortion: { id: "DISTORTION", name: "Distortion" },
-  feedbackDelay: { id: "FEEDBACKDELAY", name: "FeedbackDelay" },
+  REVERB: { id: "REVERB", name: "Reverb" },
+  DISTORTION: { id: "DISTORTION", name: "Distortion" },
+  FEEDBACKDELAY: { id: "FEEDBACKDELAY", name: "FeedbackDelay" },
 };
 export const FX_PACK_IDs = Object.values(FX_PACK).map((fx) => fx.id);
 
@@ -91,20 +92,19 @@ type T_FX_PARAMS_DEFAULTS = {
 };
 
 export const FX_PARAMS_DEFAULTS: T_FX_PARAMS_DEFAULTS = {
-  reverb: {
+  REVERB: {
     wet: { value: 1 },
     decay: { value: 0.5 },
     preDelay: { value: 0.5 },
   },
-  distortion: {
+  DISTORTION: {
     wet: { value: 1 },
     distortion: { value: 0.5 },
     oversample: { value: "none" },
   },
-  feedbackDelay: {
+  FEEDBACKDELAY: {
     wet: { value: 1 },
     delayTime: { value: 0.5 },
     feedback: { value: 0.5 },
-    maxDelay: { value: 0.5, isMain: true },
   },
 };

@@ -27,7 +27,7 @@ type FX_Node_ParamsTypes = {
 };
 
 export type T_FX_Node = {
-  reverb: FX_Node_ParamsTypes["reverb"];
-  distortion: FX_Node_ParamsTypes["distortion"];
-  feedbackDelay: FX_Node_ParamsTypes["feedbackDelay"];
+  REVERB: FX_Node_ParamsTypes["REVERB"];
+  DISTORTION: FX_Node_ParamsTypes["DISTORTION"];
+  FEEDBACKDELAY: FX_Node_ParamsTypes["FEEDBACKDELAY"];
 };
