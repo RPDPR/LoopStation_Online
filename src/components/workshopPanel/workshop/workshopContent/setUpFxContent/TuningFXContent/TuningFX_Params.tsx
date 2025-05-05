@@ -1,8 +1,8 @@
 import { FC } from "react";
 import { useFXStore } from "@data/store/FXStore.ts";
-import { BundleID, FxID } from "@data/store/FXStoreTypes.ts";
-import { FX_PARAMS_DEFAULTS, FX_ID } from "@data/store/FX_ParamsTypes.ts";
-import { T_FX_Node } from "@data/store/FXStoreTypes.ts";
+import { BundleID, FxID, T_FX_Node } from "@data/store/FXStoreTypes.ts";
+import { FXUtils } from "@data/store/audioUtils/main.ts";
+import { FX_ID } from "@data/store/FX_ParamsTypes.ts";
 
 type T_TuningFX_Params = {
   bundleID: BundleID;
@@ -16,22 +16,51 @@ export const TuningFX_Params: FC<T_TuningFX_Params> = ({ bundleID, fxID }) => {
   const fx = bundle.bundleParams.fxs.find((fx) => fx.fxID === fxID);
   const fxParams = fx?.fxNode?.get() ?? null;
 
-  const fxEditableParams = Object.entries(fxParams as T_FX_Node[FX_ID]).filter(
-    ([paramKey]) => {
-      return Object.keys(FX_PARAMS_DEFAULTS[fxID]).includes(paramKey);
-    }
+  const completeFxObject = FXUtils.buildFxObject(
+    fxID,
+    fxParams as unknown as T_FX_Node[FX_ID] & { [key: string]: unknown }
   );
 
+  console.log(completeFxObject);
+
   return (
-    <div className="w-full h-full grid grid-cols-2 auto-rows-max gap-2 overflow-y-auto [&::-webkit-scrollbar]:bg-transparent [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-thumb]:bg-[#757575] [&::-webkit-scrollbar-thumb]:rounded-lg py-1 pr-1 pl-1">
+    <div className="w-full h-full grid grid-cols-2 auto-rows-max gap-x-4 gap-y-2 overflow-y-auto [&::-webkit-scrollbar]:bg-transparent [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-thumb]:bg-[#757575] [&::-webkit-scrollbar-thumb]:rounded-lg py-1 pr-1 pl-1">
       {fx && fxParams ? (
-        fxEditableParams.map(([paramKey, paramValue]) => {
-          return (
-            <div key={`fxParam-${bundle.bundleID}-${fx.fxID}-${paramKey}`}>
-              {`${paramKey} ${paramValue}`}
-            </div>
-          );
-        })
+        Object.entries(completeFxObject)
+          .filter(([key]) => {
+            return key !== "id" && key !== "name";
+          })
+          .map(([key, param]) => {
+            return (
+              <div
+                className="flex flex-row justify-between items-center"
+                key={`fxParam-${bundle.bundleID}-${fx.fxID}-${key}`}
+              >
+                <div className="text-xs">{param.name}</div>
+                <div className="">
+                  {param.type === "number" ? (
+                    <input
+                      className="w-15 h-7 border-1 border-white rounded-md text-center overflow-hidden"
+                      type="number"
+                      max={param.max}
+                      min={param.min}
+                      step={param.step}
+                      value={param.value}
+                    />
+                  ) : (
+                    <select
+                      value={param.value}
+                      className="bg-[#757575] border border-[#757575] text-white text-sm rounded-lg focus:border-white block p-1 appearance-none text-center"
+                    >
+                      {param.options.map((option: string) => (
+                        <option value={option}>{option}</option>
+                      ))}
+                    </select>
+                  )}
+                </div>
+              </div>
+            );
+          })
       ) : (
         <div>
           <button>Argh</button>

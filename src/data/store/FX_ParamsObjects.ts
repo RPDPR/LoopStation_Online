@@ -1,0 +1,97 @@
+import { FX_ParamsTypes } from "./FX_ParamsTypes";
+
+export const FX_PARAMS_TEMPLATES: {
+  [K in keyof FX_ParamsTypes]: FX_ParamsTypes[K];
+} = {
+  REVERB: {
+    id: "REVERB",
+    name: "Reverb",
+    wet: {
+      type: "number",
+      min: 0,
+      max: 1,
+      default: 1,
+      step: 0.1,
+      name: "Wet",
+      value: 1,
+    },
+    decay: {
+      type: "number",
+      min: 0,
+      max: 1,
+      default: 0.5,
+      step: 0.1,
+      name: "Decay",
+      value: 0.5,
+    },
+    preDelay: {
+      type: "number",
+      min: 0,
+      max: 1,
+      default: 0.5,
+      step: 0.1,
+      name: "PreDelay",
+      value: 0.5,
+    },
+  },
+  DISTORTION: {
+    id: "DISTORTION",
+    name: "Distortion",
+    wet: {
+      type: "number",
+      min: 0,
+      max: 1,
+      default: 1,
+      step: 0.1,
+      name: "Wet",
+      value: 1,
+    },
+    distortion: {
+      type: "number",
+      min: 0,
+      max: 1,
+      default: 0.5,
+      step: 0.1,
+      name: "Distortion",
+      value: 0.5,
+    },
+    oversample: {
+      type: "string",
+      options: ["none", "2x", "4x"],
+      default: "none",
+      name: "Oversample",
+      value: "none",
+    },
+  },
+  FEEDBACKDELAY: {
+    id: "FEEDBACKDELAY",
+    name: "FeedbackDelay",
+    wet: {
+      type: "number",
+      min: 0,
+      max: 1,
+      default: 1,
+      step: 0.1,
+      name: "Wet",
+      value: 1,
+    },
+    delayTime: {
+      type: "number",
+      min: 0,
+      max: 1,
+      default: 0.5,
+      step: 0.1,
+      name: "DelayTime",
+      value: 0.5,
+    },
+    feedback: {
+      type: "number",
+      min: 0,
+      max: 1,
+      default: 0.5,
+      step: 0.1,
+      name: "Feedback",
+      value: 0.5,
+    },
+  },
+};

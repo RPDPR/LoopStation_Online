@@ -1,5 +1,11 @@
 import * as Tone from "tone";
-import { FX_PARAMS_DEFAULTS } from "../FX_ParamsTypes";
+import {
+  FX_ParamsTypes,
+  FX_ID,
+  FX_PARAMS_DEFAULTS,
+} from "@data/store/FX_ParamsTypes";
+import { T_FX_Node } from "@data/store/FXStoreTypes.ts";
+import { FX_PARAMS_TEMPLATES } from "@data/store/FX_ParamsObjects.ts";
 
 export const FXUtils = {
   splitFXParams<K extends keyof typeof FX_PARAMS_DEFAULTS>(
@@ -33,6 +39,35 @@ export const FXUtils = {
     };
 
     return { mainParams, sideParams };
+  },
+
+  buildFxObject<T extends FX_ID>(
+    fxID: T,
+    fxParams: T_FX_Node[T] & { [key: string]: unknown }
+  ): FX_ParamsTypes[T] {
+    const template = FX_PARAMS_TEMPLATES[fxID];
+
+    const fxEditableParams: typeof fxParams = Object.fromEntries(
+      Object.entries(fxParams).filter(([paramKey]) => {
+        return Object.keys(template).includes(paramKey);
+      })
+    );
+
+    const filled = Object.fromEntries(
+      Object.entries(template).map(([key, param]) => {
+        if (key === "id" || key === "name") return [key, param];
+
+        return [
+          key,
+          {
+            ...param,
+            value: fxEditableParams[key as keyof typeof fxEditableParams],
+          },
+        ];
+      })
+    );
+
+    return filled as FX_ParamsTypes[T];
   },
 };
 
