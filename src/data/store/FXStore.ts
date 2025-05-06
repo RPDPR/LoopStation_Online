@@ -294,11 +294,13 @@ export const useFXStore = create<FXStore>((set, get) => ({
 
       const reverb = new Tone.Reverb({
         ...mainParams,
+        ...fx.fxNode?.get(),
         ...params,
       });
 
       reverb.set({
         ...sideParams,
+        ...fx.fxNode?.get(),
         ...params,
       });
 
@@ -339,11 +341,13 @@ export const useFXStore = create<FXStore>((set, get) => ({
 
       const distortion = new Tone.Distortion({
         ...mainParams,
+        ...fx.fxNode?.get(),
         ...params,
       });
 
       distortion.set({
         ...sideParams,
+        ...fx.fxNode?.get(),
         ...params,
       });
 
@@ -389,11 +393,13 @@ export const useFXStore = create<FXStore>((set, get) => ({
 
       const feedbackDelay = new Tone.FeedbackDelay({
         ...mainParams,
+        ...fx.fxNode?.get(),
         ...params,
       });
 
       feedbackDelay.set({
         ...sideParams,
+        ...fx.fxNode?.get(),
         ...params,
       });
 
