@@ -48,19 +48,21 @@ export const TuningFX_Params: FC<T_TuningFX_Params> = ({ bundleID, fxID }) => {
                 className="flex flex-row justify-between items-center"
                 key={`fxParam-${bundle.bundleID}-${fx.fxID}-${key}`}
               >
-                <div className="text-xs">{param.name}</div>
+                <div title={param.name} className="text-xs">
+                  {param.name}
+                </div>
                 <div className="">
                   {param.type === "number" ? (
                     <input
                       onChange={handleChangeNumber(key)}
                       className="w-14 h-1 bg-[#757575] rounded-lg appearance-none cursor-pointer 
              [&::-webkit-slider-thumb]:appearance-none 
-             [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 
+             [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 
              [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:rounded-full 
              [&::-webkit-slider-thumb]:cursor-pointer 
              [&::-webkit-slider-thumb]:transition-colors 
              [&::-webkit-slider-thumb]:hover:bg-gray-200 
-             [&::-moz-range-thumb]:w-4 [&::-moz-range-thumb]:h-4 
+             [&::-moz-range-thumb]:w-3 [&::-moz-range-thumb]:h-3 
              [&::-moz-range-thumb]:bg-white [&::-moz-range-thumb]:rounded-full 
              [&::-moz-range-thumb]:cursor-pointer 
              [&::-moz-range-thumb]:transition-colors 

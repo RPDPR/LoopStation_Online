@@ -30,4 +30,7 @@ export type T_FX_Node = {
   REVERB: FX_Node_ParamsTypes["REVERB"];
   DISTORTION: FX_Node_ParamsTypes["DISTORTION"];
   FEEDBACKDELAY: FX_Node_ParamsTypes["FEEDBACKDELAY"];
+  BITCRUSHER: FX_Node_ParamsTypes["BITCRUSHER"];
+  PHASER: FX_Node_ParamsTypes["PHASER"];
+  FREQUENCYSHIFTER: FX_Node_ParamsTypes["FREQUENCYSHIFTER"];
 };

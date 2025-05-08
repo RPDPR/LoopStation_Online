@@ -94,6 +94,15 @@ interface FXStore {
     bundleID: BundleID,
     FX_Params: T_FX_Node["FEEDBACKDELAY"]
   ) => void;
+  bitCrusher_FX: (
+    bundleID: BundleID,
+    FX_Params: T_FX_Node["BITCRUSHER"]
+  ) => void;
+  phaser_FX: (bundleID: BundleID, FX_Params: T_FX_Node["PHASER"]) => void;
+  frequencyShifter_FX: (
+    bundleID: BundleID,
+    FX_Params: T_FX_Node["FREQUENCYSHIFTER"]
+  ) => void;
   // FX /////
 }
 export const useFXStore = create<FXStore>((set, get) => ({
@@ -274,6 +283,18 @@ export const useFXStore = create<FXStore>((set, get) => ({
           FX_Params as T_FX_Node["FEEDBACKDELAY"]
         );
         break;
+      case "BITCRUSHER":
+        get().bitCrusher_FX(bundleID, FX_Params as T_FX_Node["BITCRUSHER"]);
+        break;
+      case "PHASER":
+        get().phaser_FX(bundleID, FX_Params as T_FX_Node["PHASER"]);
+        break;
+      case "FREQUENCYSHIFTER":
+        get().frequencyShifter_FX(
+          bundleID,
+          FX_Params as T_FX_Node["FREQUENCYSHIFTER"]
+        );
+        break;
       default:
         throw new Error(`Unsupported FX ID: ${fxID}`);
     }
@@ -292,17 +313,26 @@ export const useFXStore = create<FXStore>((set, get) => ({
         FX_PARAMS_DEFAULTS.REVERB
       );
 
-      const reverb = new Tone.Reverb({
-        ...mainParams,
-        ...fx.fxNode?.get(),
-        ...params,
-      });
-
-      reverb.set({
-        ...sideParams,
-        ...fx.fxNode?.get(),
-        ...params,
-      });
+      const reverb: Tone.ToneAudioNode =
+        fx.fxNode != null
+          ? Object.keys(mainParams).length === 0
+            ? fx.fxNode.set({
+                ...sideParams,
+                ...fx.fxNode?.get(),
+                ...params,
+              })
+            : new Tone.Reverb({
+                ...mainParams,
+                ...fx.fxNode?.get(),
+                ...params,
+              }).set({ ...sideParams, ...fx.fxNode?.get(), ...params })
+          : new Tone.Reverb({
+              ...mainParams,
+              ...params,
+            }).set({
+              ...sideParams,
+              ...params,
+            });
 
       const newFXObject: Fxs[number] = {
         fxID: fx?.fxID ?? "REVERB",
@@ -339,17 +369,26 @@ export const useFXStore = create<FXStore>((set, get) => ({
         FX_PARAMS_DEFAULTS.DISTORTION
       );
 
-      const distortion = new Tone.Distortion({
-        ...mainParams,
-        ...fx.fxNode?.get(),
-        ...params,
-      });
-
-      distortion.set({
-        ...sideParams,
-        ...fx.fxNode?.get(),
-        ...params,
-      });
+      const distortion: Tone.ToneAudioNode =
+        fx.fxNode != null
+          ? Object.keys(mainParams).length === 0
+            ? fx.fxNode.set({
+                ...sideParams,
+                ...fx.fxNode?.get(),
+                ...params,
+              })
+            : new Tone.Distortion({
+                ...mainParams,
+                ...fx.fxNode?.get(),
+                ...params,
+              }).set({ ...sideParams, ...fx.fxNode?.get(), ...params })
+          : new Tone.Distortion({
+              ...mainParams,
+              ...params,
+            }).set({
+              ...sideParams,
+              ...params,
+            });
 
       const newFXObject: Fxs[number] = {
         fxID: fx?.fxID ?? "DISTORTION",
@@ -391,23 +430,204 @@ export const useFXStore = create<FXStore>((set, get) => ({
         FX_PARAMS_DEFAULTS.FEEDBACKDELAY
       );
 
-      const feedbackDelay = new Tone.FeedbackDelay({
-        ...mainParams,
-        ...fx.fxNode?.get(),
-        ...params,
-      });
-
-      feedbackDelay.set({
-        ...sideParams,
-        ...fx.fxNode?.get(),
-        ...params,
-      });
+      const feedbackDelay: Tone.ToneAudioNode =
+        fx.fxNode != null
+          ? Object.keys(mainParams).length === 0
+            ? fx.fxNode.set({
+                ...sideParams,
+                ...fx.fxNode?.get(),
+                ...params,
+              })
+            : new Tone.FeedbackDelay({
+                ...mainParams,
+                ...fx.fxNode?.get(),
+                ...params,
+              }).set({ ...sideParams, ...fx.fxNode?.get(), ...params })
+          : new Tone.FeedbackDelay({
+              ...mainParams,
+              ...params,
+            }).set({
+              ...sideParams,
+              ...params,
+            });
 
       const newFXObject: Fxs[number] = {
         fxID: fx?.fxID ?? "FEEDBACKDELAY",
         fxName: fx?.fxName ?? "FeedbackDelay",
         fxIsSelected: fx?.fxIsSelected ?? false,
         fxNode: feedbackDelay,
+      };
+
+      if (fxIndex !== -1) {
+        newBundleFXs[fxIndex] = newFXObject;
+      } else {
+        newBundleFXs.push(newFXObject);
+      }
+
+      newBundleArray[bundleID] = {
+        ...bundle,
+        bundleParams: { ...bundle.bundleParams, fxs: newBundleFXs },
+      };
+
+      return { bundleArray: newBundleArray };
+    });
+  },
+  bitCrusher_FX: (bundleID: BundleID, params: T_FX_Node["BITCRUSHER"]) => {
+    set((state) => {
+      const newBundleArray = [...state.bundleArray];
+      const bundle = newBundleArray[bundleID];
+      const newBundleFXs: Fxs = [...bundle.bundleParams.fxs];
+
+      const fxIndex = newBundleFXs.findIndex((fx) => fx.fxID === "BITCRUSHER");
+      const fx = newBundleFXs[fxIndex];
+
+      const { mainParams, sideParams } = FXUtils.splitFXParams(
+        FX_PARAMS_DEFAULTS.BITCRUSHER
+      );
+
+      const bitCrusher: Tone.ToneAudioNode =
+        fx.fxNode != null
+          ? Object.keys(mainParams).length === 0
+            ? fx.fxNode.set({
+                ...sideParams,
+                ...fx.fxNode?.get(),
+                ...params,
+              })
+            : new Tone.BitCrusher({
+                ...mainParams,
+                ...fx.fxNode?.get(),
+                ...params,
+              }).set({ ...sideParams, ...fx.fxNode?.get(), ...params })
+          : new Tone.BitCrusher({
+              ...mainParams,
+              ...params,
+            }).set({
+              ...sideParams,
+              ...params,
+            });
+
+      const newFXObject: Fxs[number] = {
+        fxID: fx?.fxID ?? "BITCRUSHER",
+        fxName: fx?.fxName ?? "BitCrusher",
+        fxIsSelected: fx?.fxIsSelected ?? false,
+        fxNode: bitCrusher,
+      };
+
+      if (fxIndex !== -1) {
+        newBundleFXs[fxIndex] = newFXObject;
+      } else {
+        newBundleFXs.push(newFXObject);
+      }
+
+      newBundleArray[bundleID] = {
+        ...bundle,
+        bundleParams: { ...bundle.bundleParams, fxs: newBundleFXs },
+      };
+
+      return { bundleArray: newBundleArray };
+    });
+  },
+
+  phaser_FX: (bundleID: BundleID, params: T_FX_Node["PHASER"]) => {
+    set((state) => {
+      const newBundleArray = [...state.bundleArray];
+      const bundle = newBundleArray[bundleID];
+      const newBundleFXs: Fxs = [...bundle.bundleParams.fxs];
+
+      const fxIndex = newBundleFXs.findIndex((fx) => fx.fxID === "PHASER");
+      const fx = newBundleFXs[fxIndex];
+
+      const { mainParams, sideParams } = FXUtils.splitFXParams(
+        FX_PARAMS_DEFAULTS.PHASER
+      );
+
+      const phaser: Tone.ToneAudioNode =
+        fx.fxNode != null
+          ? Object.keys(mainParams).length === 0
+            ? fx.fxNode.set({
+                ...sideParams,
+                ...fx.fxNode?.get(),
+                ...params,
+              })
+            : new Tone.Phaser({
+                ...mainParams,
+                ...fx.fxNode?.get(),
+                ...params,
+              }).set({ ...sideParams, ...fx.fxNode?.get(), ...params })
+          : new Tone.Phaser({
+              ...mainParams,
+              ...params,
+            }).set({
+              ...sideParams,
+              ...params,
+            });
+
+      const newFXObject: Fxs[number] = {
+        fxID: fx?.fxID ?? "PHASER",
+        fxName: fx?.fxName ?? "Phaser",
+        fxIsSelected: fx?.fxIsSelected ?? false,
+        fxNode: phaser,
+      };
+
+      if (fxIndex !== -1) {
+        newBundleFXs[fxIndex] = newFXObject;
+      } else {
+        newBundleFXs.push(newFXObject);
+      }
+
+      newBundleArray[bundleID] = {
+        ...bundle,
+        bundleParams: { ...bundle.bundleParams, fxs: newBundleFXs },
+      };
+
+      return { bundleArray: newBundleArray };
+    });
+  },
+
+  frequencyShifter_FX: (
+    bundleID: BundleID,
+    params: T_FX_Node["FREQUENCYSHIFTER"]
+  ) => {
+    set((state) => {
+      const newBundleArray = [...state.bundleArray];
+      const bundle = newBundleArray[bundleID];
+      const newBundleFXs: Fxs = [...bundle.bundleParams.fxs];
+
+      const fxIndex = newBundleFXs.findIndex(
+        (fx) => fx.fxID === "FREQUENCYSHIFTER"
+      );
+      const fx = newBundleFXs[fxIndex];
+
+      const { mainParams, sideParams } = FXUtils.splitFXParams(
+        FX_PARAMS_DEFAULTS.FREQUENCYSHIFTER
+      );
+
+      const frequencyShifter: Tone.ToneAudioNode =
+        fx.fxNode != null
+          ? Object.keys(mainParams).length === 0
+            ? fx.fxNode.set({
+                ...sideParams,
+                ...fx.fxNode?.get(),
+                ...params,
+              })
+            : new Tone.FrequencyShifter({
+                ...mainParams,
+                ...fx.fxNode?.get(),
+                ...params,
+              }).set({ ...sideParams, ...fx.fxNode?.get(), ...params })
+          : new Tone.FrequencyShifter({
+              ...mainParams,
+              ...params,
+            }).set({
+              ...sideParams,
+              ...params,
+            });
+
+      const newFXObject: Fxs[number] = {
+        fxID: fx?.fxID ?? "FREQUENCYSHIFTER",
+        fxName: fx?.fxName ?? "FrequencyShifter",
+        fxIsSelected: fx?.fxIsSelected ?? false,
+        fxNode: frequencyShifter,
       };
 
       if (fxIndex !== -1) {

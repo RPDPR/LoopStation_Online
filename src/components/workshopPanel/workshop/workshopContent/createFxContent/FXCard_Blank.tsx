@@ -1,6 +1,7 @@
 import React from "react";
 import { useFXStore } from "@data/store/FXStore.ts";
 import { FxID, FxName } from "@data/store/FXStoreTypes.ts";
+import { FX_PARAMS_TEMPLATES } from "@data/store/FX_ParamsObjects";
 
 type T_FXCard_Blank = {
   fxID: FxID;
@@ -18,7 +19,7 @@ export const FXCard_Blank: React.FC<T_FXCard_Blank> = ({
 
   const handleClick: React.MouseEventHandler<HTMLDivElement> = () => {
     if (bundle) {
-      addFX(bundle.bundleID, fxID, fxName ?? null);
+      addFX(bundle.bundleID, fxID, fxName ?? FX_PARAMS_TEMPLATES[fxID].name);
       updateFXParams(bundle.bundleID, fxID, {});
     }
   };
