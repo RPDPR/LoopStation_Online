@@ -42,8 +42,18 @@ export interface Track {
   effects: Tone.ToneAudioNode[] | null;
 }
 
+export interface MasterFX {
+  effects: Tone.ToneAudioNode[] | null;
+}
+export interface InputFX {
+  effects: Tone.ToneAudioNode[] | null;
+}
+
 interface LoopStore {
   tracks: Track[];
+  masterFXArray: MasterFX[];
+  inputFXArray: InputFX[];
+
   bpm: number;
   setBpm: (value: number) => void;
   measure: number;
@@ -75,6 +85,13 @@ export const useLoopStore = create<LoopStore>((set, get) => ({
     player: null,
     volume: 100,
     length: null,
+    effects: null,
+  })),
+
+  masterFXArray: Array.from({ length: 4 }, () => ({
+    effects: null,
+  })),
+  inputFXArray: Array.from({ length: 4 }, () => ({
     effects: null,
   })),
 

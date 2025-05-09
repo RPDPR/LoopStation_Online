@@ -1,10 +1,19 @@
 import { useFXStore } from "../../../../../data/store/FXStore.ts";
+import { useDraggable } from "@dnd-kit/core";
 
 type T_BundleCard = {
   bundleID: number;
 };
 
 export const BundleCard: React.FC<T_BundleCard> = ({ bundleID }) => {
+  const { attributes, listeners, setNodeRef } = useDraggable({
+    id: `bundle-${bundleID}`,
+    data: {
+      type: "bundle",
+      bundleID,
+    },
+  });
+
   const bundleArray = useFXStore((state) => state.bundleArray);
   const setBundleSelection = useFXStore((state) => state.setBundleSelection);
 
@@ -18,7 +27,12 @@ export const BundleCard: React.FC<T_BundleCard> = ({ bundleID }) => {
   };
 
   return (
-    <div className="min-w-12 w-12 h-full text-xs text-left flex flex-row items-end py-2 pl-2">
+    <div
+      ref={setNodeRef}
+      {...listeners}
+      {...attributes}
+      className="min-w-12 w-12 h-full text-xs text-left flex flex-row items-end py-2 pl-2"
+    >
       <div
         onClick={handleClick}
         className={

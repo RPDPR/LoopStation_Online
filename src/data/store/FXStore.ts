@@ -103,6 +103,7 @@ interface FXStore {
     bundleID: BundleID,
     FX_Params: T_FX_Node["FREQUENCYSHIFTER"]
   ) => void;
+  tremolo_FX: (bundleID: BundleID, FX_Params: T_FX_Node["TREMOLO"]) => void;
   // FX /////
 }
 export const useFXStore = create<FXStore>((set, get) => ({
@@ -294,6 +295,9 @@ export const useFXStore = create<FXStore>((set, get) => ({
           bundleID,
           FX_Params as T_FX_Node["FREQUENCYSHIFTER"]
         );
+        break;
+      case "TREMOLO":
+        get().tremolo_FX(bundleID, FX_Params as T_FX_Node["TREMOLO"]);
         break;
       default:
         throw new Error(`Unsupported FX ID: ${fxID}`);
@@ -628,6 +632,62 @@ export const useFXStore = create<FXStore>((set, get) => ({
         fxName: fx?.fxName ?? "FrequencyShifter",
         fxIsSelected: fx?.fxIsSelected ?? false,
         fxNode: frequencyShifter,
+      };
+
+      if (fxIndex !== -1) {
+        newBundleFXs[fxIndex] = newFXObject;
+      } else {
+        newBundleFXs.push(newFXObject);
+      }
+
+      newBundleArray[bundleID] = {
+        ...bundle,
+        bundleParams: { ...bundle.bundleParams, fxs: newBundleFXs },
+      };
+
+      return { bundleArray: newBundleArray };
+    });
+  },
+
+  tremolo_FX: (bundleID: BundleID, params: T_FX_Node["TREMOLO"]) => {
+    set((state) => {
+      const newBundleArray = [...state.bundleArray];
+      const bundle = newBundleArray[bundleID];
+      const newBundleFXs: Fxs = [...bundle.bundleParams.fxs];
+
+      const fxIndex = newBundleFXs.findIndex((fx) => fx.fxID === "TREMOLO");
+      const fx = newBundleFXs[fxIndex];
+
+      const { mainParams, sideParams } = FXUtils.splitFXParams(
+        FX_PARAMS_DEFAULTS.TREMOLO
+      );
+
+      const tremolo: Tone.ToneAudioNode =
+        fx.fxNode != null
+          ? Object.keys(mainParams).length === 0
+            ? fx.fxNode.set({
+                ...sideParams,
+                ...fx.fxNode?.get(),
+                ...params,
+              })
+            : new Tone.Tremolo({
+                ...mainParams,
+                ...fx.fxNode?.get(),
+                ...params,
+              }).set({ ...sideParams, ...fx.fxNode?.get(), ...params })
+          : new Tone.Tremolo({
+              ...mainParams,
+              ...params,
+            }).set({
+              ...sideParams,
+              ...params,
+            });
+
+      const newFXObject: Fxs[number] = {
+        fxID: fx?.fxID ?? "TREMOLO",
+        fxName: fx?.fxName ?? "Tremolo",
+        fxIsSelected: fx?.fxIsSelected ?? false,
+        fxNode: tremolo,
       };
 
       if (fxIndex !== -1) {

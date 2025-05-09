@@ -90,6 +90,28 @@ type T_FrequencyShifter_FX = {
   };
 };
 
+type T_Tremolo_FX = {
+  readonly id: "TREMOLO";
+  readonly name: "Tremolo";
+
+  wet: T_Num<{ min: 0; max: 1; default: 1 }> & { name: "D/W" };
+  frequency: T_Num<{ min: 0; max: 20; default: 0; step: 0.1 }> & {
+    name: "Frequency";
+  };
+  type: T_Str<{
+    options: ["sine", "square", "triangle", "sawtooth"];
+    default: "sine";
+  }> & {
+    name: "Type";
+  };
+  depth: T_Num<{ min: 0; max: 1; default: 0.5; step: 0.01 }> & {
+    name: "Depth";
+  };
+  spread: T_Num<{ min: 0; max: 180; default: 180; step: 1 }> & {
+    name: "Spread";
+  };
+};
+
 // main params /////
 type FX_ParamsTypes_List =
   | T_Reverb_FX
@@ -97,7 +119,8 @@ type FX_ParamsTypes_List =
   | T_FeedbackDelay_FX
   | T_BitCrusher_FX
   | T_Phaser_FX
-  | T_FrequencyShifter_FX;
+  | T_FrequencyShifter_FX
+  | T_Tremolo_FX;
 
 export type FX_ParamsTypes = {
   [FX in FX_ParamsTypes_List as FX["id"]]: FX;
@@ -120,6 +143,7 @@ export const FX_PACK: T_FX_PACK = {
   BITCRUSHER: { id: "BITCRUSHER", name: "BitCrusher" },
   PHASER: { id: "PHASER", name: "Phaser" },
   FREQUENCYSHIFTER: { id: "FREQUENCYSHIFTER", name: "FrequencyShifter" },
+  TREMOLO: { id: "TREMOLO", name: "Tremolo" },
 };
 export const FX_PACK_IDs = Object.values(FX_PACK).map((fx) => fx.id);
 
@@ -165,5 +189,12 @@ export const FX_PARAMS_DEFAULTS: T_FX_PARAMS_DEFAULTS = {
   FREQUENCYSHIFTER: {
     wet: { value: 1 },
     frequency: { value: 0 },
+  },
+  TREMOLO: {
+    wet: { value: 1 },
+    frequency: { value: 0 },
+    type: { value: "sine" },
+    depth: { value: 0.5 },
+    spread: { value: 180 },
   },
 };

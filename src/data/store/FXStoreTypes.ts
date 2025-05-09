@@ -33,4 +33,5 @@ export type T_FX_Node = {
   BITCRUSHER: FX_Node_ParamsTypes["BITCRUSHER"];
   PHASER: FX_Node_ParamsTypes["PHASER"];
   FREQUENCYSHIFTER: FX_Node_ParamsTypes["FREQUENCYSHIFTER"];
+  TREMOLO: FX_Node_ParamsTypes["TREMOLO"];
 };
