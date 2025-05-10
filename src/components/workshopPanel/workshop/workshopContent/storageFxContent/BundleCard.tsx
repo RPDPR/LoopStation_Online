@@ -9,8 +9,7 @@ export const BundleCard: React.FC<T_BundleCard> = ({ bundleID }) => {
   const { attributes, listeners, setNodeRef } = useDraggable({
     id: `bundle-${bundleID}`,
     data: {
-      type: "bundle",
-      bundleID,
+      bundleID: bundleID,
     },
   });
 
@@ -28,13 +27,13 @@ export const BundleCard: React.FC<T_BundleCard> = ({ bundleID }) => {
 
   return (
     <div
-      ref={setNodeRef}
-      {...listeners}
-      {...attributes}
+      onClick={handleClick}
       className="min-w-12 w-12 h-full text-xs text-left flex flex-row items-end py-2 pl-2"
     >
       <div
-        onClick={handleClick}
+        ref={setNodeRef}
+        {...listeners}
+        {...attributes}
         className={
           "w-full h-full rounded-lg cursor-pointer border-2 " +
           (isSelected
