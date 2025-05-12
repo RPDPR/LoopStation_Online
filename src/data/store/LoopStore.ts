@@ -1,6 +1,17 @@
 import { create } from "zustand";
 import * as Tone from "tone";
 import { loopUtils } from "./audioUtils/main.ts";
+import { Bundle } from "@data/store/FXStore.ts";
+import {
+  ContainerFxBundle,
+  ContainerFxBundleID,
+  ContainerFxBundleParams,
+  BundleContainerType,
+  BundleContainerTypeElem,
+  OperationType,
+  OperationTypeElem,
+} from "@data/store/LoopStoreTypes.ts";
+
 export enum LoopState_Rec {
   Idle,
   Recording,
@@ -42,17 +53,43 @@ export interface Track {
   effects: Tone.ToneAudioNode[] | null;
 }
 
+export interface TrackFX {
+  bundleContainerType: BundleContainerTypeElem;
+  containerFxBundles: {
+    bundleID: ContainerFxBundleID;
+    bundleParams: ContainerFxBundleParams;
+  }[];
+}
 export interface MasterFX {
-  effects: Tone.ToneAudioNode[] | null;
+  bundleContainerType: BundleContainerTypeElem;
+  containerFxBundles: {
+    bundleID: ContainerFxBundleID;
+    bundleParams: ContainerFxBundleParams;
+  }[];
 }
 export interface InputFX {
-  effects: Tone.ToneAudioNode[] | null;
+  bundleContainerType: BundleContainerTypeElem;
+  containerFxBundles: {
+    bundleID: ContainerFxBundleID;
+    bundleParams: ContainerFxBundleParams;
+  }[];
 }
 
 interface LoopStore {
   tracks: Track[];
-  masterFXArray: MasterFX[];
-  inputFXArray: InputFX[];
+
+  trackFX: TrackFX[];
+  masterFX: MasterFX;
+  inputFX: InputFX;
+  updateFxBundlesContainer: (
+    bundleContainerType: BundleContainerTypeElem,
+    params: {
+      operationType?: OperationTypeElem;
+      trackIndex?: number;
+      containerFxBundleID?: ContainerFxBundle["bundleID"];
+      containerFxBundle?: ContainerFxBundle;
+    }
+  ) => void;
 
   bpm: number;
   setBpm: (value: number) => void;
@@ -88,12 +125,82 @@ export const useLoopStore = create<LoopStore>((set, get) => ({
     effects: null,
   })),
 
-  masterFXArray: Array.from({ length: 4 }, () => ({
-    effects: null,
+  trackFX: Array.from({ length: 5 }, () => ({
+    bundleContainerType: "TRACKFX",
+    containerFxBundles: [],
   })),
-  inputFXArray: Array.from({ length: 4 }, () => ({
-    effects: null,
-  })),
+  masterFX: {
+    bundleContainerType: "MASTERFX",
+    containerFxBundles: [],
+  },
+  inputFX: {
+    bundleContainerType: "INPUTFX",
+    containerFxBundles: [],
+  },
+
+  updateFxBundlesContainer: (
+    bundleContainerType: BundleContainerTypeElem,
+    params: {
+      operationType?: OperationTypeElem;
+      trackIndex?: number;
+      containerFxBundleID?: ContainerFxBundle["bundleID"];
+      containerFxBundle?: ContainerFxBundle;
+    }
+  ) => {
+    set((state) => {
+      const operationType = params.operationType ?? "DELETE";
+      const containerFxBundleID = params.containerFxBundleID ?? null;
+      const containerFxBundle = params.containerFxBundle ?? null;
+      const trackIndex = params.trackIndex ?? 0;
+
+      const newContainerFxBundles = [
+        ...(bundleContainerType === "INPUTFX"
+          ? state.inputFX.containerFxBundles
+          : bundleContainerType === "MASTERFX"
+          ? state.masterFX.containerFxBundles
+          : state.trackFX[trackIndex].containerFxBundles),
+      ];
+
+      if (operationType === "DELETE" && containerFxBundleID != null) {
+        const containerFxBundleIndex = newContainerFxBundles.findIndex(
+          (bndl) => bndl.bundleID === containerFxBundleID
+        );
+        if (containerFxBundleIndex !== -1) {
+          newContainerFxBundles.splice(containerFxBundleIndex, 1);
+        }
+      } else if (operationType === "ADD" && containerFxBundle != null) {
+        if (!newContainerFxBundles.find((bndl) => bndl === containerFxBundle)) {
+          newContainerFxBundles.push(containerFxBundle);
+        } else {
+          console.error("A bundle with that name already exists!");
+        }
+      }
+
+      return {
+        ...(bundleContainerType === "INPUTFX"
+          ? {
+              inputFX: {
+                ...state.inputFX,
+                containerFxBundles: newContainerFxBundles,
+              },
+            }
+          : bundleContainerType === "MASTERFX"
+          ? {
+              masterFX: {
+                ...state.masterFX,
+                containerFxBundles: newContainerFxBundles,
+              },
+            }
+          : {
+              trackFX: state.trackFX.map((track, i) =>
+                i === trackIndex
+                  ? { ...track, containerFxBundles: newContainerFxBundles }
+                  : track
+              ),
+            }),
+      };
+    });
+  },
 
   bpm: 120,
 

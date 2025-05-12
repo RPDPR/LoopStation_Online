@@ -19,9 +19,8 @@ import { useFXStore } from "@data/store/FXStore.ts";
 
 function App() {
   const bundleArray = useFXStore((state) => state.bundleArray);
-  const activeBundle = bundleArray.find((bdl) => bdl.bundleIsSelected) ?? null;
 
-  const [activeBundleID, setActiveBundleID] = useState(null);
+  const [activeBundleID, setActiveBundleID] = useState(null); // for every droppable areas
   const [droppedBundles, setDroppedBundles] = useState<{
     [trackIndex: number]: number[];
   }>({});
@@ -35,10 +34,13 @@ function App() {
   const sensors = useSensors(pointerSensor);
 
   const handleDragStart = (e: DragStartEvent) => {
-    setActiveBundleID(e.active.data.current?.bundleID);
+    const { active /*draggable elem*/ } = e;
+
+    setActiveBundleID(active.data.current?.bundleID);
   };
   const handleDragEnd = (e: DragEndEvent) => {
-    const { active, over } = e;
+    const { active /*draggable elem*/, over /*droppable elem*/ } = e;
+
     setActiveBundleID(null);
 
     if (!over) return;

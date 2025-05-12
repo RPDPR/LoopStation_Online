@@ -2,16 +2,13 @@ import { useDroppable } from "@dnd-kit/core";
 
 type T_TrackFx = {
   trackIndex: number;
-  droppedBundles: number[];
 };
 
-export const TrackFx: React.FC<T_TrackFx> = ({
-  trackIndex,
-  droppedBundles,
-}) => {
+export const TrackFx: React.FC<T_TrackFx> = ({ trackIndex }) => {
   const { isOver, setNodeRef } = useDroppable({
     id: `track-${trackIndex}`,
     data: {
+      bundleContainerType: "trackFX",
       trackIndex: trackIndex,
     },
   });
