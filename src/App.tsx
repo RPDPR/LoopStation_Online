@@ -15,15 +15,19 @@ import {
 } from "@dnd-kit/core";
 import { snapCenterToCursor } from "@dnd-kit/modifiers";
 import { useState } from "react";
-import { useFXStore } from "@data/store/FXStore.ts";
+import { useLoopStore } from "@data/store/LoopStore.ts";
+
+import {
+  ContainerFxBundle,
+  ContainerFxBundleID,
+  BundleContainerTypeElem,
+} from "@data/store/LoopStoreTypes.ts";
 
 function App() {
-  const bundleArray = useFXStore((state) => state.bundleArray);
-
-  const [activeBundleID, setActiveBundleID] = useState(null); // for every droppable areas
-  const [droppedBundles, setDroppedBundles] = useState<{
-    [trackIndex: number]: number[];
-  }>({});
+  const [bundleID, setBundleID] = useState<ContainerFxBundleID | null>(null); // for every droppable areas
+  const updateFxBundlesContainer = useLoopStore(
+    (state) => state.updateFxBundlesContainer
+  );
 
   const pointerSensor = useSensor(PointerSensor, {
     activationConstraint: {
@@ -35,24 +39,55 @@ function App() {
 
   const handleDragStart = (e: DragStartEvent) => {
     const { active /*draggable elem*/ } = e;
-
-    setActiveBundleID(active.data.current?.bundleID);
+    setBundleID(active.data.current?.containerFxBundleID);
   };
   const handleDragEnd = (e: DragEndEvent) => {
     const { active /*draggable elem*/, over /*droppable elem*/ } = e;
 
-    setActiveBundleID(null);
+    const containerFxBundleID: ContainerFxBundleID =
+      active.data.current?.containerFxBundleID;
+    const containerFxBundle: ContainerFxBundle =
+      active.data.current?.containerFxBundle;
 
-    if (!over) return;
+    const drag_bundleContainerType: BundleContainerTypeElem =
+      active?.data.current?.bundleContainerType;
+    const drop_bundleContainerType: BundleContainerTypeElem =
+      over?.data.current?.bundleContainerType;
 
-    const activeBundleID = active.data.current?.bundleID;
-    const trackIndex = over.data.current?.trackIndex;
+    const drag_trackIndex: number = active?.data.current?.trackIndex;
+    const drop_trackIndex: number = over?.data.current?.trackIndex;
 
-    if (activeBundleID != null && trackIndex != null) {
-      setDroppedBundles((prev) => ({
-        ...prev,
-        [trackIndex]: [...(prev[trackIndex] || []), activeBundleID],
-      }));
+    setBundleID(null);
+
+    const isSameDroppableContainer =
+      drag_bundleContainerType === drop_bundleContainerType &&
+      drag_trackIndex === drop_trackIndex;
+
+    if (!over) {
+      if (!drag_bundleContainerType && !drop_bundleContainerType) return;
+      updateFxBundlesContainer(drag_bundleContainerType, {
+        operationType: "DELETE",
+        trackIndex: drag_trackIndex,
+        containerFxBundleID: containerFxBundleID,
+      }); //updating
+      return;
+    }
+
+    if (isSameDroppableContainer) return;
+
+    if (drag_bundleContainerType != null) {
+      updateFxBundlesContainer(drag_bundleContainerType, {
+        operationType: "DELETE",
+        trackIndex: drag_trackIndex,
+        containerFxBundleID: containerFxBundleID,
+      }); //updating
+    }
+    if (drop_bundleContainerType != null) {
+      updateFxBundlesContainer(drop_bundleContainerType, {
+        operationType: "ADD",
+        trackIndex: drop_trackIndex,
+        containerFxBundle: containerFxBundle,
+      }); //updating
     }
   };
 
@@ -69,7 +104,7 @@ function App() {
           <WorkshopPanel />
           <GlobalFxPanel />
         </div>
-        <TrackFxPanel droppedBundles={droppedBundles} />
+        <TrackFxPanel />
         <LoopPanel />
       </div>
       <DragOverlay>
@@ -78,7 +113,7 @@ function App() {
             "w-11 h-11 rounded-lg cursor-pointer border-2 border-[#959595] text-[#959595] flex flex-row justify-center items-center"
           }
         >
-          {activeBundleID != null ? String(activeBundleID + 1) : "null"}
+          {bundleID != null ? String(bundleID + 1) : "null"}
         </div>
       </DragOverlay>
     </DndContext>

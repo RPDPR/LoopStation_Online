@@ -1,14 +1,12 @@
 import { create } from "zustand";
 import * as Tone from "tone";
 import { loopUtils } from "./audioUtils/main.ts";
-import { Bundle } from "@data/store/FXStore.ts";
+
 import {
   ContainerFxBundle,
   ContainerFxBundleID,
   ContainerFxBundleParams,
-  BundleContainerType,
   BundleContainerTypeElem,
-  OperationType,
   OperationTypeElem,
 } from "@data/store/LoopStoreTypes.ts";
 
@@ -169,13 +167,20 @@ export const useLoopStore = create<LoopStore>((set, get) => ({
           newContainerFxBundles.splice(containerFxBundleIndex, 1);
         }
       } else if (operationType === "ADD" && containerFxBundle != null) {
-        if (!newContainerFxBundles.find((bndl) => bndl === containerFxBundle)) {
+        if (
+          !newContainerFxBundles.find(
+            (bndl) => bndl.bundleID === containerFxBundle.bundleID
+          ) &&
+          newContainerFxBundles.length <= 3
+        ) {
           newContainerFxBundles.push(containerFxBundle);
         } else {
-          console.error("A bundle with that name already exists!");
+          console.error(
+            "A bundle with that name already exists or this container is already filled!"
+          );
         }
       }
-
+      console.log(trackIndex, containerFxBundleID, bundleContainerType);
       return {
         ...(bundleContainerType === "INPUTFX"
           ? {

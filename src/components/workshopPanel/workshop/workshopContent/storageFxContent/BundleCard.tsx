@@ -1,4 +1,4 @@
-import { useFXStore } from "../../../../../data/store/FXStore.ts";
+import { useFXStore } from "@data/store/FXStore.ts";
 import { useDraggable } from "@dnd-kit/core";
 
 type T_BundleCard = {
@@ -6,18 +6,18 @@ type T_BundleCard = {
 };
 
 export const BundleCard: React.FC<T_BundleCard> = ({ bundleID }) => {
+  const bundleArray = useFXStore((state) => state.bundleArray);
+  const bundle = bundleArray.find((b) => b.bundleID === bundleID);
+  const isSelected = bundle?.bundleIsSelected ?? false;
+  const setBundleSelection = useFXStore((state) => state.setBundleSelection);
+
   const { attributes, listeners, setNodeRef } = useDraggable({
     id: `bundle-${bundleID}`,
     data: {
-      bundleID: bundleID,
+      containerFxBundleID: bundleID,
+      containerFxBundle: bundle ?? null,
     },
   });
-
-  const bundleArray = useFXStore((state) => state.bundleArray);
-  const setBundleSelection = useFXStore((state) => state.setBundleSelection);
-
-  const bundle = bundleArray.find((b) => b.bundleID === bundleID);
-  const isSelected = bundle?.bundleIsSelected ?? false;
 
   const handleClick: React.MouseEventHandler<HTMLDivElement> = () => {
     bundleArray.forEach((bundle) => {
