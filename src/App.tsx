@@ -28,6 +28,7 @@ function App() {
   const updateFxBundlesContainer = useLoopStore(
     (state) => state.updateFxBundlesContainer
   );
+  const updateTrackFXs = useLoopStore((state) => state.updateTrackFXs);
 
   const pointerSensor = useSensor(PointerSensor, {
     activationConstraint: {
@@ -65,29 +66,35 @@ function App() {
 
     if (!over) {
       if (!drag_bundleContainerType && !drop_bundleContainerType) return;
+      //updating
       updateFxBundlesContainer(drag_bundleContainerType, {
         operationType: "DELETE",
         trackIndex: drag_trackIndex,
         containerFxBundleID: containerFxBundleID,
-      }); //updating
+      });
+      updateTrackFXs(drag_trackIndex);
       return;
     }
 
     if (isSameDroppableContainer) return;
 
     if (drag_bundleContainerType != null) {
+      //updating
       updateFxBundlesContainer(drag_bundleContainerType, {
         operationType: "DELETE",
         trackIndex: drag_trackIndex,
         containerFxBundleID: containerFxBundleID,
-      }); //updating
+      });
+      updateTrackFXs(drag_trackIndex);
     }
     if (drop_bundleContainerType != null) {
+      //updating
       updateFxBundlesContainer(drop_bundleContainerType, {
         operationType: "ADD",
         trackIndex: drop_trackIndex,
         containerFxBundle: containerFxBundle,
-      }); //updating
+      });
+      updateTrackFXs(drop_trackIndex);
     }
   };
 

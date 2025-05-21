@@ -48,7 +48,6 @@ export interface Track {
   player: Tone.Player | null;
   volume: number;
   length: number | null;
-  effects: Tone.ToneAudioNode[] | null;
 }
 
 export interface TrackFX {
@@ -98,7 +97,8 @@ interface LoopStore {
   // playLoop: (trackIndex: number) => void;
   stopLoop: (trackIndex: number) => void;
   changeVolume: (trackIndex: number, value: number) => void;
-  toggleEffects: (trackIndex: number) => void;
+  updateTrackFXs: (trackIndex: number) => void;
+  toggleTrackFX: (trackIndex: number) => void;
   metronome: Metronome;
   startMetronome: (bpm: number, measure: number, noteValue: number) => void;
   stopMetronome: () => Promise<void>;
@@ -180,7 +180,7 @@ export const useLoopStore = create<LoopStore>((set, get) => ({
           );
         }
       }
-      console.log(trackIndex, containerFxBundleID, bundleContainerType);
+
       return {
         ...(bundleContainerType === "INPUTFX"
           ? {
@@ -298,7 +298,6 @@ export const useLoopStore = create<LoopStore>((set, get) => ({
           buffer: newBuffer,
           state_rec: LoopState_Rec.Overdubbing,
           state_pause: LoopState_Pause.Playing,
-          effects: track.effects,
         };
         return {
           tracks: newTracks,
@@ -322,7 +321,11 @@ export const useLoopStore = create<LoopStore>((set, get) => ({
           const newPlayer = loopUtils.createPlayer(
             quantizedBuffer,
             track.volume,
-            track.effects
+            loopUtils.getTrackFxNodes(
+              trackIndex,
+              { trackFX: get().trackFX, masterFX: get().masterFX },
+              { includeTrackFxNodes: true, includeMasterFxNodes: true }
+            )
           );
 
           newPlayer.start(startTime);
@@ -334,7 +337,6 @@ export const useLoopStore = create<LoopStore>((set, get) => ({
               player: newPlayer,
               state_rec: LoopState_Rec.Playing,
               state_pause: LoopState_Pause.Playing,
-              effects: track.effects,
             };
             return {
               tracks: newTracks,
@@ -357,7 +359,11 @@ export const useLoopStore = create<LoopStore>((set, get) => ({
       const newPlayer = loopUtils.createPlayer(
         quantizedBuffer,
         track.volume,
-        track.effects
+        loopUtils.getTrackFxNodes(
+          trackIndex,
+          { trackFX: get().trackFX, masterFX: get().masterFX },
+          { includeTrackFxNodes: true, includeMasterFxNodes: true }
+        )
       );
 
       newPlayer.start();
@@ -371,7 +377,6 @@ export const useLoopStore = create<LoopStore>((set, get) => ({
           state_rec: LoopState_Rec.Playing,
           state_pause: LoopState_Pause.Playing,
           player: newPlayer,
-          effects: track.effects,
         };
         return { tracks: newTracks, measure: measure, bpm: bpm };
       });
@@ -460,20 +465,66 @@ export const useLoopStore = create<LoopStore>((set, get) => ({
     });
   },
 
-  toggleEffects: (trackIndex) => {
+  updateTrackFXs: (trackIndex) => {
     set((state) => {
       const newTracks = [...state.tracks];
       const track = newTracks[trackIndex];
 
-      if (track.player && track.effects) {
-        track.player.disconnect();
+      if (!track.player) return { tracks: newTracks };
+      if (track.state_fx === LoopState_FX.Off) return { tracks: newTracks };
 
-        if (track.state_fx === LoopState_FX.Off) {
-          track.player.chain(...track.effects, Tone.getDestination());
-        } else {
-          track.player.chain(Tone.getDestination());
+      const trackFxNodes = loopUtils.getTrackFxNodes(
+        trackIndex,
+        {
+          trackFX: state.trackFX,
+          masterFX: state.masterFX,
+          inputFX: state.inputFX,
+        },
+        {
+          includeTrackFxNodes: true,
+          includeMasterFxNodes: true,
+          includeInputFxNodes: true,
         }
+      );
+
+      track.player.disconnect();
+
+      if (trackFxNodes.length > 0) {
+        track.player.chain(...trackFxNodes, Tone.getDestination());
+      } else {
+        track.player.toDestination();
       }
+
+      newTracks[trackIndex] = {
+        ...track,
+        player: track.player,
+      };
+
+      return { tracks: newTracks };
+    });
+  },
+
+  toggleTrackFX: (trackIndex) => {
+    set((state) => {
+      const newTracks = [...state.tracks];
+      const track = newTracks[trackIndex];
+
+      if (!track.player) return { tracks: newTracks };
+
+      const trackFxNodes = loopUtils.getTrackFxNodes(
+        trackIndex,
+        { trackFX: state.trackFX },
+        { includeTrackFxNodes: true }
+      );
+      console.log(trackFxNodes);
+      track.player.disconnect();
+
+      if (track.state_fx === LoopState_FX.Off && trackFxNodes.length > 0) {
+        track.player.chain(...trackFxNodes, Tone.getDestination());
+      } else {
+        track.player.toDestination();
+      }
+
       newTracks[trackIndex] = {
         ...track,
         player: track.player,
@@ -482,7 +533,7 @@ export const useLoopStore = create<LoopStore>((set, get) => ({
             ? LoopState_FX.On
             : LoopState_FX.Off,
       };
-      console.log(track.state_fx);
+
       return { tracks: newTracks };
     });
   },

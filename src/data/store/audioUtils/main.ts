@@ -6,6 +6,7 @@ import {
 } from "@data/store/FX_ParamsTypes";
 import { T_FX_Node } from "@data/store/FXStoreTypes.ts";
 import { FX_PARAMS_TEMPLATES } from "@data/store/FX_ParamsObjects.ts";
+import { TrackFX, MasterFX, InputFX } from "@data/store/LoopStore.ts";
 
 export const FXUtils = {
   splitFXParams<K extends keyof typeof FX_PARAMS_DEFAULTS>(
@@ -138,10 +139,60 @@ export const loopUtils = {
     return new Tone.ToneAudioBuffer(quantizedBuffer);
   },
 
+  getTrackFxNodes: (
+    trackIndex: number,
+    bundleContainers: {
+      trackFX?: TrackFX[];
+      masterFX?: MasterFX;
+      inputFX?: InputFX;
+    },
+    includeFlags: {
+      includeTrackFxNodes?: boolean;
+      includeMasterFxNodes?: boolean;
+      includeInputFxNodes?: boolean;
+    }
+  ): Tone.ToneAudioNode[] => {
+    const {
+      includeTrackFxNodes = true,
+      includeMasterFxNodes = true,
+      includeInputFxNodes = false,
+    } = includeFlags;
+
+    const fxNodes: Tone.ToneAudioNode[] = [];
+
+    if (includeTrackFxNodes && bundleContainers.trackFX) {
+      const trackFxBundles =
+        bundleContainers.trackFX[trackIndex].containerFxBundles;
+      trackFxBundles.forEach((bundle) => {
+        bundle.bundleParams.fxs.forEach((fx) => fxNodes.push(fx.fxNode!));
+        // fxNodes.push(bundle.bundleParams.dryWet.dryWetNode);
+        fxNodes.push(bundle.bundleParams.outputGain.gainNode);
+      });
+    }
+
+    if (includeMasterFxNodes && bundleContainers.masterFX) {
+      bundleContainers.masterFX.containerFxBundles.forEach((bundle) => {
+        bundle.bundleParams.fxs.forEach((fx) => fxNodes.push(fx.fxNode!));
+        // fxNodes.push(bundle.bundleParams.dryWet.dryWetNode);
+        fxNodes.push(bundle.bundleParams.outputGain.gainNode);
+      });
+    }
+
+    if (includeInputFxNodes && bundleContainers.inputFX) {
+      bundleContainers.inputFX.containerFxBundles.forEach((bundle) => {
+        bundle.bundleParams.fxs.forEach((fx) => fxNodes.push(fx.fxNode!));
+        // fxNodes.push(bundle.bundleParams.dryWet.dryWetNode);
+        fxNodes.push(bundle.bundleParams.outputGain.gainNode);
+      });
+    }
+
+    return fxNodes;
+  },
+
   createPlayer: (
     buffer: Tone.ToneAudioBuffer,
     volume: number,
-    fx: Tone.ToneAudioNode[] | null
+    fxNodesArray: Tone.ToneAudioNode[] | null
   ) => {
     const player = new Tone.Player(
       new Tone.ToneAudioBuffer(buffer)
@@ -154,9 +205,9 @@ export const loopUtils = {
 
     player.volume.value = volumeDb;
 
-    if (fx) {
+    if (fxNodesArray) {
       player.disconnect();
-      player.chain(...fx, Tone.getDestination());
+      player.chain(...fxNodesArray, Tone.getDestination());
     }
 
     return player;

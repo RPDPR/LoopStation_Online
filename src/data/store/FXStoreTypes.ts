@@ -30,8 +30,11 @@ export type T_FX_Node = {
   REVERB: FX_Node_ParamsTypes["REVERB"];
   DISTORTION: FX_Node_ParamsTypes["DISTORTION"];
   FEEDBACKDELAY: FX_Node_ParamsTypes["FEEDBACKDELAY"];
+  PITCHSHIFT: FX_Node_ParamsTypes["PITCHSHIFT"];
   BITCRUSHER: FX_Node_ParamsTypes["BITCRUSHER"];
   PHASER: FX_Node_ParamsTypes["PHASER"];
   FREQUENCYSHIFTER: FX_Node_ParamsTypes["FREQUENCYSHIFTER"];
   TREMOLO: FX_Node_ParamsTypes["TREMOLO"];
+  EQ3: FX_Node_ParamsTypes["EQ3"];
+  LFO: FX_Node_ParamsTypes["LFO"];
 };

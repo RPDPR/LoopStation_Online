@@ -1,7 +1,7 @@
 import React from "react";
 import { useState } from "react";
 
-export const TrackBtn: React.FC<{ trackIndex: number }> = () => {
+export const MasterFxBtn: React.FC<{ trackIndex: number }> = () => {
   const [isActive, setIsActive] = useState<boolean>(false);
   const handleClick = () => {
     setIsActive(!isActive);
@@ -12,12 +12,12 @@ export const TrackBtn: React.FC<{ trackIndex: number }> = () => {
       <button
         className={
           isActive
-            ? "bg-green-700/70 px-2 py-1 rounded-md cursor-pointer flex transition-colors duration-150"
-            : "bg-white/10 px-2 py-1 rounded-md cursor-pointer flex transition-colors duration-150"
+            ? "bg-green-700/70 px-3 py-1 ml-6 rounded-md cursor-pointer flex mr-4 transition-colors duration-150"
+            : "bg-white/10 px-3 py-1 ml-6 rounded-md cursor-pointer flex mr-4 transition-colors duration-150"
         }
         onClick={handleClick}
       >
-        TRACK
+        MFX
       </button>
     </div>
   );

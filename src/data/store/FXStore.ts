@@ -93,6 +93,10 @@ interface FXStore {
     bundleID: BundleID,
     FX_Params: T_FX_Node["FEEDBACKDELAY"]
   ) => void;
+  pitchShift_FX: (
+    bundleID: BundleID,
+    FX_Params: T_FX_Node["PITCHSHIFT"]
+  ) => void;
   bitCrusher_FX: (
     bundleID: BundleID,
     FX_Params: T_FX_Node["BITCRUSHER"]
@@ -103,6 +107,8 @@ interface FXStore {
     FX_Params: T_FX_Node["FREQUENCYSHIFTER"]
   ) => void;
   tremolo_FX: (bundleID: BundleID, FX_Params: T_FX_Node["TREMOLO"]) => void;
+  EQ3_FX: (bundleID: BundleID, FX_Params: T_FX_Node["EQ3"]) => void;
+  LFO_FX: (bundleID: BundleID, FX_Params: T_FX_Node["LFO"]) => void;
   // FX /////
 }
 export const useFXStore = create<FXStore>((set, get) => ({
@@ -283,6 +289,9 @@ export const useFXStore = create<FXStore>((set, get) => ({
           FX_Params as T_FX_Node["FEEDBACKDELAY"]
         );
         break;
+      case "PITCHSHIFT":
+        get().pitchShift_FX(bundleID, FX_Params as T_FX_Node["PITCHSHIFT"]);
+        break;
       case "BITCRUSHER":
         get().bitCrusher_FX(bundleID, FX_Params as T_FX_Node["BITCRUSHER"]);
         break;
@@ -297,6 +306,12 @@ export const useFXStore = create<FXStore>((set, get) => ({
         break;
       case "TREMOLO":
         get().tremolo_FX(bundleID, FX_Params as T_FX_Node["TREMOLO"]);
+        break;
+      case "EQ3":
+        get().EQ3_FX(bundleID, FX_Params as T_FX_Node["EQ3"]);
+        break;
+      case "LFO":
+        get().LFO_FX(bundleID, FX_Params as T_FX_Node["LFO"]);
         break;
       default:
         throw new Error(`Unsupported FX ID: ${fxID}`);
@@ -475,6 +490,63 @@ export const useFXStore = create<FXStore>((set, get) => ({
       return { bundleArray: newBundleArray };
     });
   },
+
+  pitchShift_FX: (bundleID: BundleID, params: T_FX_Node["PITCHSHIFT"]) => {
+    set((state) => {
+      const newBundleArray = [...state.bundleArray];
+      const bundle = newBundleArray[bundleID];
+      const newBundleFXs: Fxs = [...bundle.bundleParams.fxs];
+
+      const fxIndex = newBundleFXs.findIndex((fx) => fx.fxID === "PITCHSHIFT");
+      const fx = newBundleFXs[fxIndex];
+
+      const { mainParams, sideParams } = FXUtils.splitFXParams(
+        FX_PARAMS_DEFAULTS.PITCHSHIFT
+      );
+
+      const pitchShift: Tone.ToneAudioNode =
+        fx.fxNode != null
+          ? Object.keys(mainParams).length === 0
+            ? fx.fxNode.set({
+                ...sideParams,
+                ...fx.fxNode?.get(),
+                ...params,
+              })
+            : new Tone.PitchShift({
+                ...mainParams,
+                ...fx.fxNode?.get(),
+                ...params,
+              }).set({ ...sideParams, ...fx.fxNode?.get(), ...params })
+          : new Tone.PitchShift({
+              ...mainParams,
+              ...params,
+            }).set({
+              ...sideParams,
+              ...params,
+            });
+      console.log(Object.keys(pitchShift.get()));
+      const newFXObject: Fxs[number] = {
+        fxID: fx?.fxID ?? "PITCHSHIFT",
+        fxName: fx?.fxName ?? "PitchShift",
+        fxIsSelected: fx?.fxIsSelected ?? false,
+        fxNode: pitchShift,
+      };
+
+      if (fxIndex !== -1) {
+        newBundleFXs[fxIndex] = newFXObject;
+      } else {
+        newBundleFXs.push(newFXObject);
+      }
+
+      newBundleArray[bundleID] = {
+        ...bundle,
+        bundleParams: { ...bundle.bundleParams, fxs: newBundleFXs },
+      };
+
+      return { bundleArray: newBundleArray };
+    });
+  },
+
   bitCrusher_FX: (bundleID: BundleID, params: T_FX_Node["BITCRUSHER"]) => {
     set((state) => {
       const newBundleArray = [...state.bundleArray];
@@ -687,6 +759,122 @@ export const useFXStore = create<FXStore>((set, get) => ({
         fxName: fx?.fxName ?? "Tremolo",
         fxIsSelected: fx?.fxIsSelected ?? false,
         fxNode: tremolo,
+      };
+
+      if (fxIndex !== -1) {
+        newBundleFXs[fxIndex] = newFXObject;
+      } else {
+        newBundleFXs.push(newFXObject);
+      }
+
+      newBundleArray[bundleID] = {
+        ...bundle,
+        bundleParams: { ...bundle.bundleParams, fxs: newBundleFXs },
+      };
+
+      return { bundleArray: newBundleArray };
+    });
+  },
+
+  EQ3_FX: (bundleID: BundleID, params: T_FX_Node["EQ3"]) => {
+    set((state) => {
+      const newBundleArray = [...state.bundleArray];
+      const bundle = newBundleArray[bundleID];
+      const newBundleFXs: Fxs = [...bundle.bundleParams.fxs];
+
+      const fxIndex = newBundleFXs.findIndex((fx) => fx.fxID === "EQ3");
+      const fx = newBundleFXs[fxIndex];
+
+      const { mainParams, sideParams } = FXUtils.splitFXParams(
+        FX_PARAMS_DEFAULTS.EQ3
+      );
+
+      const EQ3: Tone.ToneAudioNode =
+        fx.fxNode != null
+          ? Object.keys(mainParams).length === 0
+            ? fx.fxNode.set({
+                ...sideParams,
+                ...fx.fxNode?.get(),
+                ...params,
+              })
+            : new Tone.EQ3({
+                ...mainParams,
+                ...fx.fxNode?.get(),
+                ...params,
+              }).set({ ...sideParams, ...fx.fxNode?.get(), ...params })
+          : new Tone.EQ3({
+              ...mainParams,
+              ...params,
+            }).set({
+              ...sideParams,
+              ...params,
+            });
+
+      const newFXObject: Fxs[number] = {
+        fxID: fx?.fxID ?? "EQ3",
+        fxName: fx?.fxName ?? "EQ3",
+        fxIsSelected: fx?.fxIsSelected ?? false,
+        fxNode: EQ3,
+      };
+
+      if (fxIndex !== -1) {
+        newBundleFXs[fxIndex] = newFXObject;
+      } else {
+        newBundleFXs.push(newFXObject);
+      }
+
+      newBundleArray[bundleID] = {
+        ...bundle,
+        bundleParams: { ...bundle.bundleParams, fxs: newBundleFXs },
+      };
+
+      return { bundleArray: newBundleArray };
+    });
+  },
+
+  LFO_FX: (bundleID: BundleID, params: T_FX_Node["LFO"]) => {
+    set((state) => {
+      const newBundleArray = [...state.bundleArray];
+      const bundle = newBundleArray[bundleID];
+      const newBundleFXs: Fxs = [...bundle.bundleParams.fxs];
+
+      const fxIndex = newBundleFXs.findIndex((fx) => fx.fxID === "LFO");
+      const fx = newBundleFXs[fxIndex];
+
+      const { mainParams, sideParams } = FXUtils.splitFXParams(
+        FX_PARAMS_DEFAULTS.LFO
+      );
+
+      const wrapper = new Tone.Filter();
+
+      const LFO: Tone.ToneAudioNode =
+        fx.fxNode != null
+          ? Object.keys(mainParams).length === 0
+            ? fx.fxNode.set({
+                ...sideParams,
+                ...fx.fxNode?.get(),
+                ...params,
+              })
+            : new Tone.LFO({
+                ...mainParams,
+                ...fx.fxNode?.get(),
+                ...params,
+              }).set({ ...sideParams, ...fx.fxNode?.get(), ...params })
+          : new Tone.LFO({
+              ...mainParams,
+              ...params,
+            }).set({
+              ...sideParams,
+              ...params,
+            });
+
+      LFO.connect(wrapper.gain);
+
+      const newFXObject: Fxs[number] = {
+        fxID: fx?.fxID ?? "LFO",
+        fxName: fx?.fxName ?? "LFO",
+        fxIsSelected: fx?.fxIsSelected ?? false,
+        fxNode: wrapper,
       };
 
       if (fxIndex !== -1) {
