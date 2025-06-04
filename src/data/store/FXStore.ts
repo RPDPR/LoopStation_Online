@@ -84,11 +84,16 @@ interface FXStore {
   // FX EDITING /////
 
   // FX /////
+  autoPanner_FX: (
+    bundleID: BundleID,
+    FX_Params: T_FX_Node["AUTOPANNER"]
+  ) => void;
   reverb_FX: (bundleID: BundleID, FX_Params: T_FX_Node["REVERB"]) => void;
   distortion_FX: (
     bundleID: BundleID,
     FX_Params: T_FX_Node["DISTORTION"]
   ) => void;
+  chebyshev_FX: (bundleID: BundleID, FX_Params: T_FX_Node["CHEBYSHEV"]) => void;
   feedbackDelay_FX: (
     bundleID: BundleID,
     FX_Params: T_FX_Node["FEEDBACKDELAY"]
@@ -108,7 +113,10 @@ interface FXStore {
   ) => void;
   tremolo_FX: (bundleID: BundleID, FX_Params: T_FX_Node["TREMOLO"]) => void;
   EQ3_FX: (bundleID: BundleID, FX_Params: T_FX_Node["EQ3"]) => void;
-  LFO_FX: (bundleID: BundleID, FX_Params: T_FX_Node["LFO"]) => void;
+  compressor_FX: (
+    bundleID: BundleID,
+    FX_Params: T_FX_Node["COMPRESSOR"]
+  ) => void;
   // FX /////
 }
 export const useFXStore = create<FXStore>((set, get) => ({
@@ -277,11 +285,17 @@ export const useFXStore = create<FXStore>((set, get) => ({
     FX_Params: T_FX_Node[keyof T_FX_Node] = {} as T_FX_Node[keyof T_FX_Node]
   ) {
     switch (fxID) {
+      case "AUTOPANNER":
+        get().autoPanner_FX(bundleID, FX_Params as T_FX_Node["AUTOPANNER"]);
+        break;
       case "REVERB":
         get().reverb_FX(bundleID, FX_Params as T_FX_Node["REVERB"]);
         break;
       case "DISTORTION":
         get().distortion_FX(bundleID, FX_Params as T_FX_Node["DISTORTION"]);
+        break;
+      case "CHEBYSHEV":
+        get().chebyshev_FX(bundleID, FX_Params as T_FX_Node["CHEBYSHEV"]);
         break;
       case "FEEDBACKDELAY":
         get().feedbackDelay_FX(
@@ -310,12 +324,116 @@ export const useFXStore = create<FXStore>((set, get) => ({
       case "EQ3":
         get().EQ3_FX(bundleID, FX_Params as T_FX_Node["EQ3"]);
         break;
-      case "LFO":
-        get().LFO_FX(bundleID, FX_Params as T_FX_Node["LFO"]);
+      case "COMPRESSOR":
+        get().compressor_FX(bundleID, FX_Params as T_FX_Node["COMPRESSOR"]);
         break;
       default:
         throw new Error(`Unsupported FX ID: ${fxID}`);
     }
+  },
+
+  // autoPanner_FX: (bundleID: BundleID, params?: T_FX_Node["AUTOPANNER"]) => {
+  //   set((state) => {
+  //     const bundles = [...state.bundleArray];
+  //     const bundle = bundles[bundleID];
+  //     const fxs = [...bundle.bundleParams.fxs];
+  //     const idx = fxs.findIndex((fx) => fx.fxID === "AUTOPANNER");
+
+  //     let apNode = fxs[idx]?.fxNode as Tone.AutoPanner | null;
+
+  //     if (apNode) {
+  //       if (params?.frequency != null)
+  //         apNode.frequency.value = params.frequency;
+  //       if (params?.depth != null) apNode.depth.value = params.depth;
+  //       if (params?.type != null) apNode.type = params.type;
+  //       if (params?.wet != null) apNode.wet.value = params.wet;
+  //     } else {
+  //       apNode = new Tone.AutoPanner({
+  //         frequency:
+  //           params?.frequency ?? FX_PARAMS_DEFAULTS.AUTOPANNER.frequency.value,
+  //         depth: params?.depth ?? FX_PARAMS_DEFAULTS.AUTOPANNER.depth.value,
+  //         type: params?.type ?? FX_PARAMS_DEFAULTS.AUTOPANNER.type.value,
+  //         wet: params?.wet ?? FX_PARAMS_DEFAULTS.AUTOPANNER.wet.value,
+  //       })
+  //         .toDestination()
+  //         .start();
+  //     }
+
+  //     const newFX: Fxs[number] = {
+  //       fxID: "AUTOPANNER",
+  //       fxName: "AutoPanner",
+  //       fxIsSelected: fxs[idx]?.fxIsSelected ?? false,
+  //       fxNode: apNode,
+  //     };
+
+  //     if (idx !== -1) fxs[idx] = newFX;
+  //     else fxs.push(newFX);
+
+  //     bundles[bundleID] = {
+  //       ...bundle,
+  //       bundleParams: {
+  //         ...bundle.bundleParams,
+  //         fxs,
+  //       },
+  //     };
+
+  //     return { bundleArray: bundles };
+  //   });
+  // },
+
+  autoPanner_FX: (bundleID: BundleID, params?: T_FX_Node["AUTOPANNER"]) => {
+    set((state) => {
+      const newBundleArray = [...state.bundleArray];
+      const bundle = newBundleArray[bundleID];
+      const newBundleFXs = [...bundle.bundleParams.fxs];
+
+      const fxIndex = newBundleFXs.findIndex((fx) => fx.fxID === "AUTOPANNER");
+      const fx = newBundleFXs[fxIndex];
+
+      const { mainParams, sideParams } = FXUtils.splitFXParams(
+        FX_PARAMS_DEFAULTS.AUTOPANNER
+      );
+
+      const autoPanner: Tone.ToneAudioNode =
+        fx.fxNode != null
+          ? (fx.fxNode as Tone.AutoPanner).set({
+              ...mainParams,
+              ...sideParams,
+              ...Object.fromEntries(
+                Object.entries(fx.fxNode.get()).filter(
+                  ([key]) =>
+                    (key in mainParams || key in sideParams) &&
+                    !(params && key in params)
+                )
+              ),
+              ...params,
+            })
+          : new Tone.AutoPanner({
+              ...mainParams,
+              ...sideParams,
+              ...params,
+            }).start();
+
+      const newFXObject: Fxs[number] = {
+        fxID: fx?.fxID ?? "AUTOPANNER",
+        fxName: fx?.fxName ?? "AutoPanner",
+        fxIsSelected: fx?.fxIsSelected ?? false,
+        fxNode: autoPanner,
+      };
+
+      if (fxIndex !== -1) {
+        newBundleFXs[fxIndex] = newFXObject;
+      } else {
+        newBundleFXs.push(newFXObject);
+      }
+
+      newBundleArray[bundleID] = {
+        ...bundle,
+        bundleParams: { ...bundle.bundleParams, fxs: newBundleFXs },
+      };
+
+      return { bundleArray: newBundleArray };
+    });
   },
 
   reverb_FX: (bundleID: BundleID, params?: T_FX_Node["REVERB"]) => {
@@ -430,6 +548,62 @@ export const useFXStore = create<FXStore>((set, get) => ({
     });
   },
 
+  chebyshev_FX: (bundleID: BundleID, params: T_FX_Node["CHEBYSHEV"]) => {
+    set((state) => {
+      const newBundleArray = [...state.bundleArray];
+      const bundle = newBundleArray[bundleID];
+      const newBundleFXs: Fxs = [...bundle.bundleParams.fxs];
+
+      const fxIndex = newBundleFXs.findIndex((fx) => fx.fxID === "CHEBYSHEV");
+      const fx = newBundleFXs[fxIndex];
+
+      const { mainParams, sideParams } = FXUtils.splitFXParams(
+        FX_PARAMS_DEFAULTS.CHEBYSHEV
+      );
+
+      const chebyshev: Tone.ToneAudioNode =
+        fx.fxNode != null
+          ? Object.keys(mainParams).length === 0
+            ? fx.fxNode.set({
+                ...sideParams,
+                ...fx.fxNode?.get(),
+                ...params,
+              })
+            : new Tone.Chebyshev({
+                ...mainParams,
+                ...fx.fxNode?.get(),
+                ...params,
+              }).set({ ...sideParams, ...fx.fxNode?.get(), ...params })
+          : new Tone.Chebyshev({
+              ...mainParams,
+              ...params,
+            }).set({
+              ...sideParams,
+              ...params,
+            });
+
+      const newFXObject: Fxs[number] = {
+        fxID: fx?.fxID ?? "CHEBYSHEV",
+        fxName: fx?.fxName ?? "Chebyshev",
+        fxIsSelected: fx?.fxIsSelected ?? false,
+        fxNode: chebyshev,
+      };
+
+      if (fxIndex !== -1) {
+        newBundleFXs[fxIndex] = newFXObject;
+      } else {
+        newBundleFXs.push(newFXObject);
+      }
+
+      newBundleArray[bundleID] = {
+        ...bundle,
+        bundleParams: { ...bundle.bundleParams, fxs: newBundleFXs },
+      };
+
+      return { bundleArray: newBundleArray };
+    });
+  },
+
   feedbackDelay_FX: (
     bundleID: BundleID,
     params: T_FX_Node["FEEDBACKDELAY"]
@@ -524,7 +698,7 @@ export const useFXStore = create<FXStore>((set, get) => ({
               ...sideParams,
               ...params,
             });
-      console.log(Object.keys(pitchShift.get()));
+
       const newFXObject: Fxs[number] = {
         fxID: fx?.fxID ?? "PITCHSHIFT",
         fxName: fx?.fxName ?? "PitchShift",
@@ -720,11 +894,11 @@ export const useFXStore = create<FXStore>((set, get) => ({
     });
   },
 
-  tremolo_FX: (bundleID: BundleID, params: T_FX_Node["TREMOLO"]) => {
+  tremolo_FX: (bundleID: BundleID, params?: T_FX_Node["TREMOLO"]) => {
     set((state) => {
       const newBundleArray = [...state.bundleArray];
       const bundle = newBundleArray[bundleID];
-      const newBundleFXs: Fxs = [...bundle.bundleParams.fxs];
+      const newBundleFXs = [...bundle.bundleParams.fxs];
 
       const fxIndex = newBundleFXs.findIndex((fx) => fx.fxID === "TREMOLO");
       const fx = newBundleFXs[fxIndex];
@@ -735,24 +909,23 @@ export const useFXStore = create<FXStore>((set, get) => ({
 
       const tremolo: Tone.ToneAudioNode =
         fx.fxNode != null
-          ? Object.keys(mainParams).length === 0
-            ? fx.fxNode.set({
-                ...sideParams,
-                ...fx.fxNode?.get(),
-                ...params,
-              })
-            : new Tone.Tremolo({
-                ...mainParams,
-                ...fx.fxNode?.get(),
-                ...params,
-              }).set({ ...sideParams, ...fx.fxNode?.get(), ...params })
+          ? (fx.fxNode as Tone.Tremolo).set({
+              ...mainParams,
+              ...sideParams,
+              ...Object.fromEntries(
+                Object.entries(fx.fxNode.get()).filter(
+                  ([key]) =>
+                    (key in mainParams || key in sideParams) &&
+                    !(params && key in params)
+                )
+              ),
+              ...params,
+            })
           : new Tone.Tremolo({
               ...mainParams,
-              ...params,
-            }).set({
               ...sideParams,
               ...params,
-            });
+            }).start();
 
       const newFXObject: Fxs[number] = {
         fxID: fx?.fxID ?? "TREMOLO",
@@ -832,22 +1005,20 @@ export const useFXStore = create<FXStore>((set, get) => ({
     });
   },
 
-  LFO_FX: (bundleID: BundleID, params: T_FX_Node["LFO"]) => {
+  compressor_FX: (bundleID: BundleID, params: T_FX_Node["COMPRESSOR"]) => {
     set((state) => {
       const newBundleArray = [...state.bundleArray];
       const bundle = newBundleArray[bundleID];
       const newBundleFXs: Fxs = [...bundle.bundleParams.fxs];
 
-      const fxIndex = newBundleFXs.findIndex((fx) => fx.fxID === "LFO");
+      const fxIndex = newBundleFXs.findIndex((fx) => fx.fxID === "COMPRESSOR");
       const fx = newBundleFXs[fxIndex];
 
       const { mainParams, sideParams } = FXUtils.splitFXParams(
-        FX_PARAMS_DEFAULTS.LFO
+        FX_PARAMS_DEFAULTS.COMPRESSOR
       );
 
-      const wrapper = new Tone.Filter();
-
-      const LFO: Tone.ToneAudioNode =
+      const compressor: Tone.ToneAudioNode =
         fx.fxNode != null
           ? Object.keys(mainParams).length === 0
             ? fx.fxNode.set({
@@ -855,12 +1026,12 @@ export const useFXStore = create<FXStore>((set, get) => ({
                 ...fx.fxNode?.get(),
                 ...params,
               })
-            : new Tone.LFO({
+            : new Tone.Compressor({
                 ...mainParams,
                 ...fx.fxNode?.get(),
                 ...params,
               }).set({ ...sideParams, ...fx.fxNode?.get(), ...params })
-          : new Tone.LFO({
+          : new Tone.Compressor({
               ...mainParams,
               ...params,
             }).set({
@@ -868,13 +1039,11 @@ export const useFXStore = create<FXStore>((set, get) => ({
               ...params,
             });
 
-      LFO.connect(wrapper.gain);
-
       const newFXObject: Fxs[number] = {
-        fxID: fx?.fxID ?? "LFO",
-        fxName: fx?.fxName ?? "LFO",
+        fxID: fx?.fxID ?? "COMPRESSOR",
+        fxName: fx?.fxName ?? "Compressor",
         fxIsSelected: fx?.fxIsSelected ?? false,
-        fxNode: wrapper,
+        fxNode: compressor,
       };
 
       if (fxIndex !== -1) {

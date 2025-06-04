@@ -27,8 +27,10 @@ type FX_Node_ParamsTypes = {
 };
 
 export type T_FX_Node = {
+  AUTOPANNER: FX_Node_ParamsTypes["AUTOPANNER"];
   REVERB: FX_Node_ParamsTypes["REVERB"];
   DISTORTION: FX_Node_ParamsTypes["DISTORTION"];
+  CHEBYSHEV: FX_Node_ParamsTypes["CHEBYSHEV"];
   FEEDBACKDELAY: FX_Node_ParamsTypes["FEEDBACKDELAY"];
   PITCHSHIFT: FX_Node_ParamsTypes["PITCHSHIFT"];
   BITCRUSHER: FX_Node_ParamsTypes["BITCRUSHER"];
@@ -36,5 +38,5 @@ export type T_FX_Node = {
   FREQUENCYSHIFTER: FX_Node_ParamsTypes["FREQUENCYSHIFTER"];
   TREMOLO: FX_Node_ParamsTypes["TREMOLO"];
   EQ3: FX_Node_ParamsTypes["EQ3"];
-  LFO: FX_Node_ParamsTypes["LFO"];
+  COMPRESSOR: FX_Node_ParamsTypes["COMPRESSOR"];
 };

@@ -25,6 +25,25 @@ type T_Str<
   type: "string";
 } & T;
 
+type T_AutoPanner_FX = {
+  readonly id: "AUTOPANNER";
+  readonly name: "AutoPanner";
+
+  wet: T_Num<{ min: 0; max: 1; default: 1 }> & { name: "D/W" };
+  frequency: T_Num<{ min: 0.1; max: 20; default: 0.1; step: 0.1 }> & {
+    name: "Frequency";
+  };
+  type: T_Str<{
+    options: ["sine", "square", "triangle", "sawtooth"];
+    default: "sine";
+  }> & {
+    name: "Type";
+  };
+  depth: T_Num<{ min: 0; max: 1; default: 1; step: 0.01 }> & {
+    name: "Depth";
+  };
+};
+
 type T_Reverb_FX = {
   readonly id: "REVERB";
   readonly name: "Reverb";
@@ -42,6 +61,18 @@ type T_Distortion_FX = {
 
   wet: T_Num<{ min: 0; max: 1; default: 1 }> & { name: "D/W" };
   distortion: T_Num<{ min: 0; max: 5; default: 0.5 }> & { name: "Distortion" };
+  oversample: T_Str<{
+    options: ["none", "2x", "4x"];
+    default: "none";
+  }> & { name: "Oversample" };
+};
+
+type T_Chebyshev_FX = {
+  readonly id: "CHEBYSHEV";
+  readonly name: "Chebyshev";
+
+  wet: T_Num<{ min: 0; max: 1; default: 1 }> & { name: "D/W" };
+  order: T_Num<{ min: 1; max: 100; default: 1; step: 1 }> & { name: "Order" };
   oversample: T_Str<{
     options: ["none", "2x", "4x"];
     default: "none";
@@ -158,36 +189,33 @@ type T_EQ3_FX = {
   };
 };
 
-type T_LFO_FX = {
-  readonly id: "LFO";
-  readonly name: "LFO";
+type T_Compressor_FX = {
+  readonly id: "COMPRESSOR";
+  readonly name: "Compressor";
 
-  wet: T_Num<{ min: 0; max: 1; default: 1 }> & { name: "D/W" };
-  type: T_Str<{
-    options: ["sine", "triangle", "square", "sawtooth"];
-    default: "sine";
-  }> & { name: "Type" };
-  frequency: T_Num<{ min: 0.01; max: 20; default: 1; step: 0.01 }> & {
-    name: "Frequency";
+  threshold: T_Num<{ min: -100; max: 0; default: -24; step: 1 }> & {
+    name: "Threshold";
   };
-  min: T_Num<{ min: -100; max: 100; default: 0; step: 0.01 }> & {
-    name: "Min";
+  ratio: T_Num<{ min: 1; max: 20; default: 12; step: 0.1 }> & {
+    name: "Ratio";
   };
-  max: T_Num<{ min: -100; max: 100; default: 1; step: 0.01 }> & {
-    name: "Max";
+  attack: T_Num<{ min: 0.01; max: 1; default: 0.03; step: 0.01 }> & {
+    name: "Attack";
   };
-  phase: T_Num<{ min: 0; max: 360; default: 0; step: 1 }> & {
-    name: "Phase";
+  release: T_Num<{ min: 0.01; max: 1; default: 0.25; step: 0.01 }> & {
+    name: "Release";
   };
-  amplitude: T_Num<{ min: 0; max: 1; default: 1; step: 0.01 }> & {
-    name: "Amplitude";
+  knee: T_Num<{ min: 0; max: 40; default: 30; step: 1 }> & {
+    name: "Knee";
   };
 };
 
 // main params /////
 type FX_ParamsTypes_List =
+  | T_AutoPanner_FX
   | T_Reverb_FX
   | T_Distortion_FX
+  | T_Chebyshev_FX
   | T_FeedbackDelay_FX
   | T_PitchShift_FX
   | T_BitCrusher_FX
@@ -195,7 +223,7 @@ type FX_ParamsTypes_List =
   | T_FrequencyShifter_FX
   | T_Tremolo_FX
   | T_EQ3_FX
-  | T_LFO_FX;
+  | T_Compressor_FX;
 
 export type FX_ParamsTypes = {
   [FX in FX_ParamsTypes_List as FX["id"]]: FX;
@@ -212,8 +240,10 @@ type T_FX_PACK = {
   };
 };
 export const FX_PACK: T_FX_PACK = {
+  AUTOPANNER: { id: "AUTOPANNER", name: "AutoPanner" },
   REVERB: { id: "REVERB", name: "Reverb" },
   DISTORTION: { id: "DISTORTION", name: "Distortion" },
+  CHEBYSHEV: { id: "CHEBYSHEV", name: "Chebyshev" },
   FEEDBACKDELAY: { id: "FEEDBACKDELAY", name: "FeedbackDelay" },
   PITCHSHIFT: { id: "PITCHSHIFT", name: "PitchShift" },
   BITCRUSHER: { id: "BITCRUSHER", name: "BitCrusher" },
@@ -221,7 +251,7 @@ export const FX_PACK: T_FX_PACK = {
   FREQUENCYSHIFTER: { id: "FREQUENCYSHIFTER", name: "FrequencyShifter" },
   TREMOLO: { id: "TREMOLO", name: "Tremolo" },
   EQ3: { id: "EQ3", name: "EQ3" },
-  LFO: { id: "LFO", name: "LFO" },
+  COMPRESSOR: { id: "COMPRESSOR", name: "Compressor" },
 };
 export const FX_PACK_IDs = Object.values(FX_PACK).map((fx) => fx.id);
 
@@ -238,6 +268,12 @@ type T_FX_PARAMS_DEFAULTS = {
 };
 
 export const FX_PARAMS_DEFAULTS: T_FX_PARAMS_DEFAULTS = {
+  AUTOPANNER: {
+    wet: { value: 1 },
+    frequency: { value: 0.1 },
+    type: { value: "sine" },
+    depth: { value: 1 },
+  },
   REVERB: {
     wet: { value: 1 },
     decay: { value: 0.5 },
@@ -246,6 +282,11 @@ export const FX_PARAMS_DEFAULTS: T_FX_PARAMS_DEFAULTS = {
   DISTORTION: {
     wet: { value: 1 },
     distortion: { value: 0.5 },
+    oversample: { value: "none" },
+  },
+  CHEBYSHEV: {
+    wet: { value: 1 },
+    order: { value: 1 },
     oversample: { value: "none" },
   },
   FEEDBACKDELAY: {
@@ -291,13 +332,11 @@ export const FX_PARAMS_DEFAULTS: T_FX_PARAMS_DEFAULTS = {
     highFrequency: { value: 2500 },
     Q: { value: 1 },
   },
-  LFO: {
-    wet: { value: 1 },
-    type: { value: "sine" },
-    frequency: { value: 1 },
-    min: { value: 0 },
-    max: { value: 1 },
-    phase: { value: 0 },
-    amplitude: { value: 1 },
+  COMPRESSOR: {
+    threshold: { value: -24 },
+    ratio: { value: 12 },
+    attack: { value: 0.03 },
+    release: { value: 0.25 },
+    knee: { value: 30 },
   },
 };
