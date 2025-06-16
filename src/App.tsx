@@ -18,10 +18,12 @@ import { useState } from "react";
 import { useLoopStore } from "@data/store/LoopStore.ts";
 
 import {
+  TrackIndex,
   ContainerFxBundle,
   ContainerFxBundleID,
-  BundleContainerTypeElem,
+  BundleContainerTypesElem,
 } from "@data/store/LoopStoreTypes.ts";
+import { loopUtils } from "@data/store/audioUtils/main.ts";
 
 function App() {
   const [bundleID, setBundleID] = useState<ContainerFxBundleID | null>(null); // for every droppable areas
@@ -48,15 +50,17 @@ function App() {
     const containerFxBundleID: ContainerFxBundleID =
       active.data.current?.containerFxBundleID;
     const containerFxBundle: ContainerFxBundle =
-      active.data.current?.containerFxBundle;
+      loopUtils.convertFxBundleToContainerFxBundle(
+        active.data.current?.containerFxBundle
+      );
 
-    const drag_bundleContainerType: BundleContainerTypeElem =
+    const drag_bundleContainerType: BundleContainerTypesElem =
       active?.data.current?.bundleContainerType;
-    const drop_bundleContainerType: BundleContainerTypeElem =
+    const drop_bundleContainerType: BundleContainerTypesElem =
       over?.data.current?.bundleContainerType;
 
-    const drag_trackIndex: number = active?.data.current?.trackIndex;
-    const drop_trackIndex: number = over?.data.current?.trackIndex;
+    const drag_trackIndex: TrackIndex = active?.data.current?.trackIndex;
+    const drop_trackIndex: TrackIndex = over?.data.current?.trackIndex;
 
     setBundleID(null);
 

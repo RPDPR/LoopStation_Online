@@ -1,3 +1,4 @@
+import { FC } from "react";
 import { useFXStore } from "@data/store/FXStore.ts";
 import { useDraggable } from "@dnd-kit/core";
 
@@ -5,7 +6,7 @@ type T_BundleCard = {
   bundleID: number;
 };
 
-export const BundleCard: React.FC<T_BundleCard> = ({ bundleID }) => {
+export const BundleCard: FC<T_BundleCard> = ({ bundleID }) => {
   const bundleArray = useFXStore((state) => state.bundleArray);
   const bundle = bundleArray.find((b) => b.bundleID === bundleID);
   const isSelected = bundle?.bundleIsSelected ?? false;
@@ -15,7 +16,7 @@ export const BundleCard: React.FC<T_BundleCard> = ({ bundleID }) => {
     id: `bundle-${bundleID}`,
     data: {
       containerFxBundleID: bundleID,
-      containerFxBundle: bundle ?? null,
+      containerFxBundle: bundle ?? null, //This is the main bundle, Not converted yet.
     },
   });
 

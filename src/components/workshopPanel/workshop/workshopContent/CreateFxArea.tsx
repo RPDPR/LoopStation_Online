@@ -1,13 +1,13 @@
+import { FC } from "react";
 import { FX_PACK, FX_PACK_IDs } from "@data/store/FX_ParamsTypes.ts";
 import { useFXStore } from "@data/store/FXStore.ts";
-import { FXCard_Blank } from "./createFxContent/FXCard_Blank.tsx";
-import { FXCard } from "./createFxContent/FXCard.tsx";
+import { FXCard_Blank } from "@workshop/workshopContent/createFxContent/FXCard_Blank.tsx";
+import { FXCard } from "@workshop/workshopContent/createFxContent/FXCard.tsx";
+import { Consts } from "@data/store/Consts.ts";
 
-export const CreateFxArea: React.FC = () => {
+export const CreateFxArea: FC = () => {
   const bundleArray = useFXStore((state) => state.bundleArray);
 
-  const fillerText_1 = "There is no FX here";
-  const fillerText_2 = "Select a bundle";
   const selectedBundle =
     bundleArray.find((bdl) => bdl.bundleIsSelected) ?? false;
 
@@ -42,12 +42,12 @@ export const CreateFxArea: React.FC = () => {
               ))
           ) : (
             <div className="w-full h-full overflow-hidden flex flex-row justify-center items-center text-center text-sm px-3">
-              {fillerText_1}
+              {Consts.CreateFxArea.fillerText_1}
             </div>
           )
         ) : (
           <div className="w-full h-full overflow-hidden flex flex-row justify-center items-center text-center text-sm px-5">
-            {fillerText_2}
+            {Consts.CreateFxArea.fillerText_2}
           </div>
         )}
       </div>

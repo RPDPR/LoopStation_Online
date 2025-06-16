@@ -4,9 +4,14 @@ import {
   FX_ID,
   FX_PARAMS_DEFAULTS,
 } from "@data/store/FX_ParamsTypes";
-import { T_FX_Node } from "@data/store/FXStoreTypes.ts";
+import { Bundle, T_FX_Node } from "@data/store/FXStoreTypes.ts";
 import { FX_PARAMS_TEMPLATES } from "@data/store/FX_ParamsObjects.ts";
-import { TrackFX, MasterFX, InputFX } from "@data/store/LoopStore.ts";
+import {
+  TrackFX,
+  MasterFX,
+  InputFX,
+  ContainerFxBundle,
+} from "@data/store/LoopStoreTypes.ts";
 
 export const FXUtils = {
   splitFXParams<K extends keyof typeof FX_PARAMS_DEFAULTS>(
@@ -211,5 +216,33 @@ export const loopUtils = {
     }
 
     return player;
+  },
+
+  convertFxBundleToContainerFxBundle: (bundle: Bundle): ContainerFxBundle => {
+    if (!bundle) {
+      return {
+        bundleID: -1,
+        bundleParams: {
+          fxs: [],
+          outputGain: {
+            gainValue: -1,
+            gainNode: new Tone.Gain(1),
+            min: 0,
+            max: 1,
+          },
+          dryWet: {
+            dryWetValue: -1,
+            dryWetNode: new Tone.CrossFade(0.5),
+            min: 0,
+            max: 1,
+          },
+        },
+      };
+    }
+    const containerFxBundle: ContainerFxBundle = {
+      bundleID: bundle.bundleID,
+      bundleParams: { ...bundle.bundleParams },
+    };
+    return containerFxBundle;
   },
 };

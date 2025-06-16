@@ -1,6 +1,6 @@
-// import { useState, useRef, useEffect } from "react";
+import { FC } from "react";
 
-export const MasterFxBucket: React.FC = () => {
+export const MasterFxBucket: FC = () => {
   return (
     <div className="h-30 w-[90%] flex flex-col items-center relative mb-1">
       <div className="mb-2">

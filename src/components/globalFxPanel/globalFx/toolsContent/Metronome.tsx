@@ -1,6 +1,6 @@
+import { FC, useState, useRef } from "react";
+import { useLoopStore } from "@data/store/LoopStore.ts";
 import { createLucideIcon, CirclePower, Volume2, Music } from "lucide-react";
-import { useState, useRef } from "react";
-import { useLoopStore } from "../../../../data/store/LoopStore.ts";
 export const MIcon = createLucideIcon("Metronome", [
   ["path", { d: "M6 20 L9 4 H15 L18 20 Z", key: "body" }],
   ["line", { x1: "12", y1: "6", x2: "12", y2: "14", key: "stick" }],
@@ -8,9 +8,12 @@ export const MIcon = createLucideIcon("Metronome", [
   ["line", { x1: "6", y1: "20", x2: "18", y2: "20", key: "base" }],
 ]);
 
-export const Metronome: React.FC = () => {
-  const { startMetronome, stopMetronome, updateMetronome, bpm } =
-    useLoopStore();
+export const Metronome: FC = () => {
+  const startMetronome = useLoopStore((state) => state.startMetronome);
+  const stopMetronome = useLoopStore((state) => state.stopMetronome);
+  const updateMetronome = useLoopStore((state) => state.updateMetronome);
+  const bpm = useLoopStore((state) => state.bpm);
+
   const [isActive, setIsActive] = useState<boolean>(false);
   const [selectedMeasure, setSelectedMeasure] = useState("4/4");
   const measure = useRef<number>(4);

@@ -1,10 +1,12 @@
-import React from "react";
+import { FC, useState } from "react";
 import { useLoopStore } from "@data/store/LoopStore.ts";
-import { useState } from "react";
+import { TrackIndex } from "@data/store/LoopStoreTypes.ts";
 
-export const TrackFxBtn: React.FC<{ trackIndex: number }> = ({
-  trackIndex,
-}) => {
+export type T_TrackFxBtn = {
+  trackIndex: TrackIndex;
+};
+
+export const TrackFxBtn: FC<T_TrackFxBtn> = ({ trackIndex }) => {
   const toggleTrackFX = useLoopStore((state) => state.toggleTrackFX);
   const [isActive, setIsActive] = useState<boolean>(false);
   const handleClick = () => {

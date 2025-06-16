@@ -1,8 +1,8 @@
-import React from "react";
-import { Plus } from "lucide-react";
+import { FC } from "react";
 import { useFXStore } from "@data/store/FXStore.ts";
+import { Plus } from "lucide-react";
 
-export const BundleCard_Blank: React.FC = () => {
+export const BundleCard_Blank: FC = () => {
   const addBundle = useFXStore((state) => state.addBundle);
 
   function generateRandomBundleName(length = 10) {

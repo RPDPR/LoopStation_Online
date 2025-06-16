@@ -1,18 +1,23 @@
-import { useState, useEffect } from "react";
+import { FC, useState, useEffect } from "react";
+import { now } from "tone";
+import { useLoopStore } from "@data/store/LoopStore.ts";
 import {
-  useLoopStore,
+  TrackIndex,
   LoopState_Rec,
   LoopState_Pause,
-} from "../../../../data/store/LoopStore.ts";
-import * as Tone from "tone";
+} from "@data/store/LoopStoreTypes.ts";
 
-export const ProgressBar = ({ trackIndex }: { trackIndex: number }) => {
-  const track = useLoopStore((state) => state.tracks[trackIndex]);
+export type T_ProgressBar = {
+  trackIndex: TrackIndex;
+};
+
+export const ProgressBar: FC<T_ProgressBar> = ({ trackIndex }) => {
+  const track = useLoopStore((state) => state.trackArray[trackIndex]);
   const bpm = useLoopStore((state) => state.bpm);
   const measure = useLoopStore((state) => state.measure);
 
   const [progress, setProgress] = useState(0);
-  const [startTime, setStartTime] = useState(Tone.now());
+  const [startTime, setStartTime] = useState(now());
 
   useEffect(() => {
     if (!track?.player || !bpm || !measure) return;
@@ -21,18 +26,18 @@ export const ProgressBar = ({ trackIndex }: { trackIndex: number }) => {
 
     const loopDuration = (measure * 60) / bpm;
 
-    const nextStartTime = Math.floor(Tone.now() / loopDuration) * loopDuration;
+    const nextStartTime = Math.floor(now() / loopDuration) * loopDuration;
     setStartTime(nextStartTime);
 
     const updateProgress = () => {
-      const elapsed = Tone.now() - startTime;
+      const elapsed = now() - startTime;
       let newProgress = 100 - (elapsed / loopDuration) * 100;
 
       if (newProgress < 0) newProgress = 0;
       if (newProgress > 100) newProgress = 100;
 
       if (elapsed >= loopDuration) {
-        setStartTime(Tone.now());
+        setStartTime(now());
         newProgress = 100;
       }
 

@@ -1,155 +1,86 @@
 import { create } from "zustand";
 import * as Tone from "tone";
 import { loopUtils } from "./audioUtils/main.ts";
-
+import { useFXStore } from "@data/store/FXStore.ts";
 import {
+  LoopState_Rec,
+  LoopState_Pause,
+  LoopState_TrackFX,
+  LoopState_MasterFX,
+  LoopState_InputFX,
+  TrackArray,
+  Track,
+  TrackFX,
+  MasterFX,
+  InputFX,
+  TrackIndex,
   ContainerFxBundle,
   ContainerFxBundleID,
   ContainerFxBundleParams,
-  BundleContainerTypeElem,
+  BundleContainerTypesElem,
   OperationTypeElem,
+  bundleContainerTypesArray,
+  trackIndexArray,
+  System_Bpm,
+  Track_Buffer,
+  Track_Volume,
+  Metronome_Bpm,
+  Metronome_Measure,
+  Metronome_NoteValue,
+  Metronome_Volume,
+  LoopStore,
 } from "@data/store/LoopStoreTypes.ts";
 
-export enum LoopState_Rec {
-  Idle,
-  Recording,
-  Overdubbing,
-  Playing,
-}
-
-export const LoopState_Pause = {
-  Playing: "Playing",
-  Paused: "Paused",
-} as const;
-
-export type LoopState_Pause =
-  (typeof LoopState_Pause)[keyof typeof LoopState_Pause];
-
-export enum LoopState_FX {
-  On,
-  Off,
-}
-
-export interface Metronome {
-  bpm: number | null;
-  measure: number | null;
-  noteValue: number | null;
-  metronomeClock: Tone.Clock | null;
-  metronomeSynth: Tone.NoiseSynth | null;
-  volume: number;
-}
-
-export interface Track {
-  state_rec: LoopState_Rec;
-  state_pause: LoopState_Pause;
-  state_fx: LoopState_FX;
-  recorder: Tone.Recorder;
-  buffer: Tone.ToneAudioBuffer | null;
-  player: Tone.Player | null;
-  volume: number;
-  length: number | null;
-}
-
-export interface TrackFX {
-  bundleContainerType: BundleContainerTypeElem;
-  containerFxBundles: {
-    bundleID: ContainerFxBundleID;
-    bundleParams: ContainerFxBundleParams;
-  }[];
-}
-export interface MasterFX {
-  bundleContainerType: BundleContainerTypeElem;
-  containerFxBundles: {
-    bundleID: ContainerFxBundleID;
-    bundleParams: ContainerFxBundleParams;
-  }[];
-}
-export interface InputFX {
-  bundleContainerType: BundleContainerTypeElem;
-  containerFxBundles: {
-    bundleID: ContainerFxBundleID;
-    bundleParams: ContainerFxBundleParams;
-  }[];
-}
-
-interface LoopStore {
-  tracks: Track[];
-
-  trackFX: TrackFX[];
-  masterFX: MasterFX;
-  inputFX: InputFX;
-  updateFxBundlesContainer: (
-    bundleContainerType: BundleContainerTypeElem,
-    params: {
-      operationType?: OperationTypeElem;
-      trackIndex?: number;
-      containerFxBundleID?: ContainerFxBundle["bundleID"];
-      containerFxBundle?: ContainerFxBundle;
-    }
-  ) => void;
-
-  bpm: number;
-  setBpm: (value: number) => void;
-  measure: number;
-  setMeasure: (buffer: Tone.ToneAudioBuffer, bpm: number) => void;
-  startRecording: (trackIndex: number) => Promise<void>;
-  stopRecording: (trackIndex: number) => Promise<void>;
-  // playLoop: (trackIndex: number) => void;
-  stopLoop: (trackIndex: number) => void;
-  changeVolume: (trackIndex: number, value: number) => void;
-  updateTrackFXs: (trackIndex: number) => void;
-  toggleTrackFX: (trackIndex: number) => void;
-  metronome: Metronome;
-  startMetronome: (bpm: number, measure: number, noteValue: number) => void;
-  stopMetronome: () => Promise<void>;
-  updateMetronome: (params: {
-    bpm?: number;
-    volume?: number;
-    measure?: number;
-    noteValue?: number;
-  }) => void;
-}
-
 export const useLoopStore = create<LoopStore>((set, get) => ({
-  tracks: Array.from({ length: 5 }, () => ({
-    state_rec: LoopState_Rec.Idle,
-    state_pause: LoopState_Pause.Playing,
-    state_fx: LoopState_FX.Off,
-    recorder: new Tone.Recorder(),
-    buffer: null,
-    player: null,
-    volume: 100,
-    length: null,
-    effects: null,
-  })),
+  trackArray: Array.from(
+    { length: 5 },
+    (): Track => ({
+      state_rec: LoopState_Rec.Idle,
+      state_pause: LoopState_Pause.Playing,
+      state_trackFX: LoopState_TrackFX.Off,
+      state_masterFX: LoopState_MasterFX.Off,
+      state_inputFX: LoopState_InputFX.Off,
+      recorder: new Tone.Recorder(),
+      buffer: null,
+      player: null,
+      volume: 100,
+      length: null,
+    })
+  ) as TrackArray,
 
-  trackFX: Array.from({ length: 5 }, () => ({
-    bundleContainerType: "TRACKFX",
-    containerFxBundles: [],
-  })),
+  trackFX: Array.from(
+    { length: 5 },
+    () =>
+      ({
+        bundleContainerType: "TRACKFX",
+        containerFxBundles: [],
+      } as TrackFX)
+  ),
   masterFX: {
     bundleContainerType: "MASTERFX",
     containerFxBundles: [],
-  },
+  } as MasterFX,
   inputFX: {
     bundleContainerType: "INPUTFX",
     containerFxBundles: [],
-  },
+  } as InputFX,
 
   updateFxBundlesContainer: (
-    bundleContainerType: BundleContainerTypeElem,
+    bundleContainerType: BundleContainerTypesElem,
     params: {
       operationType?: OperationTypeElem;
-      trackIndex?: number;
-      containerFxBundleID?: ContainerFxBundle["bundleID"];
+      trackIndex?: TrackIndex;
+      containerFxBundleID?: ContainerFxBundleID;
       containerFxBundle?: ContainerFxBundle;
+      containerFxBundleParams?: ContainerFxBundleParams;
     }
   ) => {
     set((state) => {
-      const operationType = params.operationType ?? "DELETE";
-      const containerFxBundleID = params.containerFxBundleID ?? null;
+      const operationType = params.operationType ?? "UPDATE";
+      const containerFxBundleID = params.containerFxBundleID ?? -1;
       const containerFxBundle = params.containerFxBundle ?? null;
-      const trackIndex = params.trackIndex ?? 0;
+      const containerFxBundleParams = params.containerFxBundleParams ?? null;
+      const trackIndex = params.trackIndex ?? -1;
 
       const newContainerFxBundles = [
         ...(bundleContainerType === "INPUTFX"
@@ -159,25 +90,63 @@ export const useLoopStore = create<LoopStore>((set, get) => ({
           : state.trackFX[trackIndex].containerFxBundles),
       ];
 
-      if (operationType === "DELETE" && containerFxBundleID != null) {
+      if (operationType === "DELETE" && containerFxBundleID != -1) {
         const containerFxBundleIndex = newContainerFxBundles.findIndex(
           (bndl) => bndl.bundleID === containerFxBundleID
         );
         if (containerFxBundleIndex !== -1) {
           newContainerFxBundles.splice(containerFxBundleIndex, 1);
         }
-      } else if (operationType === "ADD" && containerFxBundle != null) {
-        if (
-          !newContainerFxBundles.find(
-            (bndl) => bndl.bundleID === containerFxBundle.bundleID
-          ) &&
-          newContainerFxBundles.length <= 3
-        ) {
+      } else if (
+        operationType === "ADD" &&
+        containerFxBundle != null &&
+        containerFxBundle.bundleID != -1
+      ) {
+        const isNoBundleAlreadyExists =
+          newContainerFxBundles.findIndex(
+            (bndl) => bndl.bundleID == containerFxBundle.bundleID
+          ) >= 0
+            ? false
+            : true;
+        // console.log(isNoBundleAlreadyExists);
+        if (isNoBundleAlreadyExists && newContainerFxBundles.length <= 3) {
           newContainerFxBundles.push(containerFxBundle);
         } else {
           console.error(
             "A bundle with that name already exists or this container is already filled!"
           );
+        }
+      } else if (
+        operationType === "UPDATE" &&
+        containerFxBundleID != -1 &&
+        containerFxBundleParams != null
+      ) {
+        const containerFxBundleIndex =
+          newContainerFxBundles.findIndex(
+            (bndl) => bndl.bundleID == containerFxBundleID
+          ) ?? -1;
+        if (containerFxBundleIndex !== -1) {
+          newContainerFxBundles[containerFxBundleIndex] = {
+            ...newContainerFxBundles[containerFxBundleIndex],
+            bundleParams: { ...containerFxBundleParams },
+          };
+          // console.log(state.trackFX[trackIndex].containerFxBundles);
+          console.log(
+            `In the ${
+              newContainerFxBundles[containerFxBundleIndex].bundleID
+            } bundleID containerBundle there are ${newContainerFxBundles[
+              containerFxBundleIndex
+            ].bundleParams.fxs.map((fx) => {
+              return fx.fxNode;
+            })} fxs!`
+          );
+          // console.log(
+          //   `Now here is a ${containerFxBundleParams.fxs.length} fxs in the bundle with ${containerFxBundleID} id. It's a ${bundleContainerType} tho)`
+          // );
+        } else {
+          // console.log(
+          //   `There is no bundle with that id exists in ${bundleContainerType}!`
+          // );
         }
       }
 
@@ -207,29 +176,67 @@ export const useLoopStore = create<LoopStore>((set, get) => ({
     });
   },
 
-  bpm: 120,
+  updateEntireFxBundleContainers: async (
+    containerFxBundleID: ContainerFxBundleID = -1
+  ) => {
+    const fxStore = useFXStore.getState();
+    const bundleArray = fxStore.bundleArray;
+    const containerFxBundleParams = bundleArray.find(
+      (bdl) => bdl.bundleID == containerFxBundleID
+    )?.bundleParams;
 
-  setBpm: (value: number) => {
-    set((state) => {
-      state.updateMetronome({ bpm: value });
-      return { bpm: value };
+    bundleContainerTypesArray.forEach((containerType) => {
+      if (containerType === "TRACKFX") {
+        trackIndexArray.forEach((trackIndex) => {
+          get().updateFxBundlesContainer(containerType, {
+            operationType: "UPDATE",
+            trackIndex: trackIndex,
+            containerFxBundleID: containerFxBundleID,
+            containerFxBundleParams: containerFxBundleParams,
+          });
+          get().updateTrackFXs(trackIndex);
+        });
+      }
+      if (containerType === "INPUTFX") {
+        get().updateFxBundlesContainer(containerType, {
+          operationType: "UPDATE",
+          containerFxBundleID: containerFxBundleID,
+          containerFxBundleParams: containerFxBundleParams,
+        });
+      }
+      if (containerType === "MASTERFX") {
+        get().updateFxBundlesContainer(containerType, {
+          operationType: "UPDATE",
+          containerFxBundleID: containerFxBundleID,
+          containerFxBundleParams: containerFxBundleParams,
+        });
+      }
     });
   },
 
+  bpm: 120,
   measure: 0,
 
-  setMeasure: (buffer: Tone.ToneAudioBuffer, bpm: number) => {
-    if (get().measure > 0) return;
+  setBpm: (bpm: System_Bpm) => {
+    set((state) => {
+      state.updateMetronome({ bpm: bpm });
+      return { bpm: bpm };
+    });
+  },
+  setMeasure: (buffer: Track_Buffer, bpm: System_Bpm) => {
+    set((state) => {
+      if (state.measure > 0 || !buffer || !bpm)
+        return { measure: state.measure };
 
-    const quarterNotes = buffer.duration / (60 / bpm);
-    const measure = Math.max(1, Math.round(quarterNotes));
-
-    set({ measure });
+      const quarterNotes = buffer.duration / (60 / bpm);
+      const newMeasure = Math.max(1, Math.round(quarterNotes));
+      return { measure: newMeasure };
+    });
   },
 
-  startRecording: async (trackIndex) => {
-    const tracks = get().tracks;
-    const track = tracks[trackIndex];
+  startRecording: async (trackIndex: TrackIndex) => {
+    const trackArray = get().trackArray;
+    const track = trackArray[trackIndex];
 
     if (
       track.state_pause === LoopState_Pause.Paused &&
@@ -241,12 +248,12 @@ export const useLoopStore = create<LoopStore>((set, get) => ({
         Math.ceil(Tone.now() / ((measure * 60) / bpm)) * ((measure * 60) / bpm);
       if (track.player) track.player.start(startTime);
       set((state) => {
-        const newTracks = [...state.tracks];
-        newTracks[trackIndex] = {
+        const newTrackArray = [...state.trackArray];
+        newTrackArray[trackIndex] = {
           ...track,
           state_pause: LoopState_Pause.Playing,
         };
-        return { tracks: newTracks };
+        return { trackArray: newTrackArray };
       });
       return;
     }
@@ -259,21 +266,21 @@ export const useLoopStore = create<LoopStore>((set, get) => ({
     track.recorder.start();
 
     set((state) => {
-      const newTracks = [...state.tracks];
-      newTracks[trackIndex] = {
+      const newTrackArray = [...state.trackArray];
+      newTrackArray[trackIndex] = {
         ...track,
         state_rec:
           track.state_rec === LoopState_Rec.Idle
             ? LoopState_Rec.Recording
             : LoopState_Rec.Overdubbing,
       };
-      return { tracks: newTracks };
+      return { trackArray: newTrackArray };
     });
   },
 
-  stopRecording: async (trackIndex) => {
-    const tracks = get().tracks;
-    const track = tracks[trackIndex];
+  stopRecording: async (trackIndex: TrackIndex) => {
+    const trackArray = get().trackArray;
+    const track = trackArray[trackIndex];
     const MIN_TRACK_LENGTH = 0.25;
     const bpm = get().bpm;
     const measure = get().measure;
@@ -292,15 +299,15 @@ export const useLoopStore = create<LoopStore>((set, get) => ({
       get().setMeasure(newBuffer, bpm);
 
       set((state) => {
-        const newTracks = [...state.tracks];
-        newTracks[trackIndex] = {
+        const newTrackArray = [...state.trackArray];
+        newTrackArray[trackIndex] = {
           ...track,
           buffer: newBuffer,
           state_rec: LoopState_Rec.Overdubbing,
           state_pause: LoopState_Pause.Playing,
         };
         return {
-          tracks: newTracks,
+          trackArray: newTrackArray,
           measure: get().measure,
           bpm: bpm,
         };
@@ -321,25 +328,27 @@ export const useLoopStore = create<LoopStore>((set, get) => ({
           const newPlayer = loopUtils.createPlayer(
             quantizedBuffer,
             track.volume,
-            loopUtils.getTrackFxNodes(
-              trackIndex,
-              { trackFX: get().trackFX, masterFX: get().masterFX },
-              { includeTrackFxNodes: true, includeMasterFxNodes: true }
-            )
+            track.state_trackFX !== LoopState_TrackFX.Off
+              ? loopUtils.getTrackFxNodes(
+                  trackIndex,
+                  { trackFX: get().trackFX, masterFX: get().masterFX },
+                  { includeTrackFxNodes: true, includeMasterFxNodes: true }
+                )
+              : []
           );
 
           newPlayer.start(startTime);
 
           set((state) => {
-            const newTracks = [...state.tracks];
-            newTracks[trackIndex] = {
+            const newTrackArray = [...state.trackArray];
+            newTrackArray[trackIndex] = {
               ...track,
               player: newPlayer,
               state_rec: LoopState_Rec.Playing,
               state_pause: LoopState_Pause.Playing,
             };
             return {
-              tracks: newTracks,
+              trackArray: newTrackArray,
               measure: measure,
               bpm: bpm,
             };
@@ -359,33 +368,35 @@ export const useLoopStore = create<LoopStore>((set, get) => ({
       const newPlayer = loopUtils.createPlayer(
         quantizedBuffer,
         track.volume,
-        loopUtils.getTrackFxNodes(
-          trackIndex,
-          { trackFX: get().trackFX, masterFX: get().masterFX },
-          { includeTrackFxNodes: true, includeMasterFxNodes: true }
-        )
+        track.state_trackFX !== LoopState_TrackFX.Off
+          ? loopUtils.getTrackFxNodes(
+              trackIndex,
+              { trackFX: get().trackFX, masterFX: get().masterFX },
+              { includeTrackFxNodes: true, includeMasterFxNodes: true }
+            )
+          : []
       );
 
       newPlayer.start();
       console.log(`PostOverdub: ${newBuffer.duration} `, newBuffer.length);
       console.log(measure, bpm);
       set((state) => {
-        const newTracks = [...state.tracks];
-        newTracks[trackIndex] = {
+        const newTrackArray = [...state.trackArray];
+        newTrackArray[trackIndex] = {
           ...track,
           buffer: new Tone.ToneAudioBuffer(mixedBuffer),
           state_rec: LoopState_Rec.Playing,
           state_pause: LoopState_Pause.Playing,
           player: newPlayer,
         };
-        return { tracks: newTracks, measure: measure, bpm: bpm };
+        return { trackArray: newTrackArray, measure: measure, bpm: bpm };
       });
     }
   },
 
-  // playLoop: (trackIndex) => {
-  //   const tracks = get().tracks;
-  //   const track = tracks[trackIndex];
+  // playLoop: (trackIndex: TrackIndex) => {
+  //   const trackArray = get().trackArray;
+  //   const track = trackArray[trackIndex];
 
   //   if (track.buffer) {
   //     if (track.player) track.player.stop();
@@ -395,23 +406,23 @@ export const useLoopStore = create<LoopStore>((set, get) => ({
   //     player.start();
 
   //     set((state) => {
-  //       const newTracks = [...state.tracks];
-  //       newTracks[trackIndex] = {
+  //       const newTrackArray = [...state.trackArray];
+  //       newTrackArray[trackIndex] = {
   //         ...track,
   //         player,
   //         volume: track.volume,
   //         state_pause: LoopState_Pause.Playing,
   //         effects: track.effects,
   //       };
-  //       return { tracks: newTracks };
+  //       return { trackArray: newTrackArray };
   //     });
   //   }
   // },
 
-  stopLoop: (trackIndex) => {
+  stopLoop: (trackIndex: TrackIndex) => {
     set((state) => {
-      const newTracks = [...state.tracks];
-      const track = newTracks[trackIndex];
+      const newTrackArray = [...state.trackArray];
+      const track = newTrackArray[trackIndex];
 
       if (track.recorder.state == "started") track.recorder.stop();
 
@@ -420,7 +431,7 @@ export const useLoopStore = create<LoopStore>((set, get) => ({
         // track.player = null;
       }
 
-      newTracks[trackIndex] = {
+      newTrackArray[trackIndex] = {
         ...track,
         state_pause: LoopState_Pause.Paused,
         state_rec:
@@ -429,7 +440,7 @@ export const useLoopStore = create<LoopStore>((set, get) => ({
             ? LoopState_Rec.Idle
             : LoopState_Rec.Playing,
       };
-      console.log(LoopState_Rec[newTracks[trackIndex].state_rec]);
+      console.log(LoopState_Rec[newTrackArray[trackIndex].state_rec]);
       // const pitchShift = new Tone.PitchShift(-12);
       // const eq = new Tone.EQ3({ low: +12, mid: -3, high: -18 });
       // const distortion = new Tone.Distortion(0.3);
@@ -440,38 +451,39 @@ export const useLoopStore = create<LoopStore>((set, get) => ({
       // };
 
       return {
-        tracks: newTracks,
+        trackArray: newTrackArray,
       };
     });
   },
 
-  changeVolume: (trackIndex, value) => {
+  changeVolume: (trackIndex: TrackIndex, volume: Track_Volume) => {
     set((state) => {
-      const newTracks = [...state.tracks];
-      const track = newTracks[trackIndex];
+      const newTrackArray = [...state.trackArray];
+      const track = newTrackArray[trackIndex];
 
-      if (!track) return { tracks: newTracks };
+      if (!track) return { trackArray: newTrackArray };
 
       const minDb = -40;
       const volumeDb =
-        value === 0 ? -Infinity : minDb + (value / 100) * Math.abs(minDb);
+        volume === 0 ? -Infinity : minDb + (volume / 100) * Math.abs(minDb);
 
       if (track.player) {
         track.player.volume.value = volumeDb;
       }
 
-      track.volume = value;
-      return { tracks: newTracks };
+      track.volume = volume;
+      return { trackArray: newTrackArray };
     });
   },
 
-  updateTrackFXs: (trackIndex) => {
+  updateTrackFXs: (trackIndex: TrackIndex) => {
     set((state) => {
-      const newTracks = [...state.tracks];
-      const track = newTracks[trackIndex];
+      const newTrackArray = [...state.trackArray];
+      const track = newTrackArray[trackIndex];
 
-      if (!track.player) return { tracks: newTracks };
-      if (track.state_fx === LoopState_FX.Off) return { tracks: newTracks };
+      if (!track.player) return { trackArray: newTrackArray };
+      if (track.state_trackFX === LoopState_TrackFX.Off)
+        return { trackArray: newTrackArray };
 
       const trackFxNodes = loopUtils.getTrackFxNodes(
         trackIndex,
@@ -486,55 +498,67 @@ export const useLoopStore = create<LoopStore>((set, get) => ({
           includeInputFxNodes: true,
         }
       );
-
+      console.log(trackFxNodes);
       track.player.disconnect();
-
       if (trackFxNodes.length > 0) {
         track.player.chain(...trackFxNodes, Tone.getDestination());
       } else {
         track.player.toDestination();
       }
 
-      newTracks[trackIndex] = {
+      newTrackArray[trackIndex] = {
         ...track,
         player: track.player,
       };
-
-      return { tracks: newTracks };
+      console.log(
+        `TrackIndex is ${trackIndex}. trackFxNodes: ${trackFxNodes}. ContainerFxBundles: ${state.trackFX[
+          trackIndex
+        ].containerFxBundles.map((contBndl) => {
+          return `${contBndl.bundleID}, ${contBndl.bundleParams.fxs.map(
+            (fx) => {
+              return fx.fxNode;
+            }
+          )}`;
+        })} `
+      );
+      return { trackArray: newTrackArray };
     });
   },
 
-  toggleTrackFX: (trackIndex) => {
+  toggleTrackFX: (trackIndex: TrackIndex) => {
     set((state) => {
-      const newTracks = [...state.tracks];
-      const track = newTracks[trackIndex];
+      const newTrackArray = [...state.trackArray];
+      const track = newTrackArray[trackIndex];
 
-      if (!track.player) return { tracks: newTracks };
+      if (!track.player) return { trackArray: newTrackArray };
 
       const trackFxNodes = loopUtils.getTrackFxNodes(
         trackIndex,
         { trackFX: state.trackFX },
         { includeTrackFxNodes: true }
       );
-      console.log(trackFxNodes);
+
       track.player.disconnect();
 
-      if (track.state_fx === LoopState_FX.Off && trackFxNodes.length > 0) {
+      if (
+        track.state_trackFX === LoopState_TrackFX.Off &&
+        trackFxNodes.length > 0
+      ) {
         track.player.chain(...trackFxNodes, Tone.getDestination());
       } else {
         track.player.toDestination();
       }
 
-      newTracks[trackIndex] = {
+      newTrackArray[trackIndex] = {
         ...track,
         player: track.player,
-        state_fx:
-          track.state_fx === LoopState_FX.Off
-            ? LoopState_FX.On
-            : LoopState_FX.Off,
+        state_trackFX:
+          track.state_trackFX === LoopState_TrackFX.Off
+            ? LoopState_TrackFX.On
+            : LoopState_TrackFX.Off,
       };
 
-      return { tracks: newTracks };
+      return { trackArray: newTrackArray };
     });
   },
 
@@ -547,7 +571,13 @@ export const useLoopStore = create<LoopStore>((set, get) => ({
     volume: 50,
   },
 
-  startMetronome: (bpm, measure, noteValue = 4) => {
+  startMetronome: (
+    bpm: Metronome_Bpm,
+    measure: Metronome_Measure,
+    noteValue: Metronome_NoteValue = 4
+  ) => {
+    if (!measure || !bpm || !noteValue) return;
+
     const synth = new Tone.NoiseSynth({
       noise: { type: "white" },
       envelope: { attack: 0.001, decay: 0.02, sustain: 0, release: 0.01 },
@@ -585,18 +615,20 @@ export const useLoopStore = create<LoopStore>((set, get) => ({
   },
 
   stopMetronome: async () => {
-    const { metronomeClock: clock, metronomeSynth: synth } = get().metronome;
-    if (clock) {
-      clock.stop();
-      clock.dispose();
-    }
-    if (synth) {
-      synth.dispose();
-    }
-    set(() => {
+    set((state) => {
+      const newMetronome = state.metronome;
+      const { metronomeClock: clock, metronomeSynth: synth } = newMetronome;
+      if (clock) {
+        clock.stop();
+        clock.dispose();
+      }
+      if (synth) {
+        synth.dispose();
+      }
+
       return {
         metronome: {
-          ...get().metronome,
+          ...newMetronome,
           bpm: null,
           measure: null,
           clock,
@@ -607,24 +639,22 @@ export const useLoopStore = create<LoopStore>((set, get) => ({
   },
 
   updateMetronome: (params: {
-    bpm?: number;
-    volume?: number;
-    measure?: number;
-    noteValue?: number;
+    bpm?: Metronome_Bpm;
+    volume?: Metronome_Volume;
+    measure?: Metronome_Measure;
+    noteValue?: Metronome_NoteValue;
   }) => {
     set((state) => {
-      const { metronome } = state;
-      const { metronomeClock: clock, metronomeSynth: synth } = metronome;
-      let newClock = clock;
-      let newSynth = synth;
+      const newMetronome = state.metronome;
+      let { metronomeClock: newClock, metronomeSynth: newSynth } = newMetronome;
 
-      if (params.bpm !== undefined) {
-        if (clock) {
-          clock.frequency.value =
-            (params.bpm * (4 / (params.noteValue ?? metronome.noteValue!))) /
+      if (params.bpm !== undefined && params.bpm !== null) {
+        if (newClock) {
+          newClock.frequency.value =
+            (params.bpm * (4 / (params.noteValue ?? newMetronome.noteValue!))) /
             60;
         }
-        metronome.bpm = params.bpm;
+        newMetronome.bpm = params.bpm;
       }
 
       if (params.volume !== undefined) {
@@ -633,29 +663,29 @@ export const useLoopStore = create<LoopStore>((set, get) => ({
           params.volume === 0
             ? -Infinity
             : minDb + (params.volume / 100) * Math.abs(minDb);
-        if (synth) {
-          synth.volume.value = volumeDb;
+        if (newSynth) {
+          newSynth.volume.value = volumeDb;
         }
-        metronome.volume = params.volume;
+        newMetronome.volume = params.volume;
       }
 
       if (params.measure !== undefined && params.noteValue !== undefined) {
-        const wasRunning = !!clock;
+        const wasRunning = !!newClock;
 
-        if (clock) {
-          clock.stop();
-          clock.dispose();
+        if (newClock) {
+          newClock.stop();
+          newClock.dispose();
         }
-        if (synth) {
-          synth.dispose();
+        if (newSynth) {
+          newSynth.dispose();
         }
         newSynth = new Tone.NoiseSynth({
           noise: { type: "white" },
           envelope: { attack: 0.001, decay: 0.02, sustain: 0, release: 0.01 },
           volume:
-            metronome.volume === 0
+            newMetronome.volume === 0
               ? -Infinity
-              : -40 + (metronome.volume / 100) * 40,
+              : -40 + (newMetronome.volume / 100) * 40,
         }).toDestination();
 
         let beat = 0;
@@ -666,19 +696,19 @@ export const useLoopStore = create<LoopStore>((set, get) => ({
             newSynth.triggerAttackRelease("8n", time);
           }
           beat = (beat + 1) % params.measure!;
-        }, ((params.bpm ?? metronome.bpm!) * (4 / params.noteValue!)) / 60);
+        }, ((params.bpm ?? newMetronome.bpm!) * (4 / params.noteValue!)) / 60);
 
         if (wasRunning) {
           newClock.start();
         }
 
-        metronome.measure = params.measure;
-        metronome.noteValue = params.noteValue;
-        metronome.metronomeClock = newClock;
-        metronome.metronomeSynth = newSynth;
+        newMetronome.measure = params.measure;
+        newMetronome.noteValue = params.noteValue;
+        newMetronome.metronomeClock = newClock;
+        newMetronome.metronomeSynth = newSynth;
       }
 
-      return { metronome };
+      return { metronome: newMetronome };
     });
   },
 }));

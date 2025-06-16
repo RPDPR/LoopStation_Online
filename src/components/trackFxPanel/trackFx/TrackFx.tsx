@@ -1,12 +1,14 @@
-import { useDroppable } from "@dnd-kit/core";
-import { useLoopStore } from "@data/store/LoopStore.ts";
+import { FC } from "react";
 import { TrackFx_BundleCard } from "./trackFxContent/TrackFx_BundleCard.tsx";
+import { useLoopStore } from "@data/store/LoopStore.ts";
+import { TrackIndex } from "@data/store/LoopStoreTypes.ts";
+import { useDroppable } from "@dnd-kit/core";
 
 type T_TrackFx = {
-  trackIndex: number;
+  trackIndex: TrackIndex;
 };
 
-export const TrackFx: React.FC<T_TrackFx> = ({ trackIndex }) => {
+export const TrackFx: FC<T_TrackFx> = ({ trackIndex }) => {
   const containerFxBundles = useLoopStore(
     (state) => state.trackFX[trackIndex].containerFxBundles
   );

@@ -1,11 +1,12 @@
-import React from "react";
-import { useFXStore } from "../../../../../../../data/store/FXStore.ts";
+import { FC } from "react";
+import { useFXStore } from "@data/store/FXStore.ts";
+import { BundleID } from "@data/store/FXStoreTypes.ts";
 
 type T_DryWet = {
-  bundleSelectedID: number;
+  bundleSelectedID: BundleID;
 };
 
-export const DryWet: React.FC<T_DryWet> = ({ bundleSelectedID }) => {
+export const DryWet: FC<T_DryWet> = ({ bundleSelectedID }) => {
   const setBundleParams = useFXStore((state) => state.setBundleParams);
   const bundleArray = useFXStore((state) => state.bundleArray);
   const bundle = bundleArray[bundleSelectedID];

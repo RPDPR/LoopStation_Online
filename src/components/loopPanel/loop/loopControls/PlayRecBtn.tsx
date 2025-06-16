@@ -1,19 +1,19 @@
-import React from "react";
+import { FC } from "react";
+import { useLoopStore } from "@data/store/LoopStore.ts";
+import { TrackIndex, LoopState_Rec } from "@data/store/LoopStoreTypes.ts";
 import { Circle, Play } from "lucide-react";
-import {
-  useLoopStore,
-  LoopState_Rec,
-} from "../../../../data/store/LoopStore.ts";
 
-export const PlayRecBtn: React.FC<{ trackIndex: number }> = ({
-  trackIndex,
-}) => {
-  const { tracks, startRecording, stopRecording } = useLoopStore();
+export type T_PlayRecBtn = {
+  trackIndex: TrackIndex;
+};
 
-  const track = tracks?.[trackIndex];
+export const PlayRecBtn: FC<T_PlayRecBtn> = ({ trackIndex }) => {
+  const track = useLoopStore((state) => state.trackArray[trackIndex]);
+  const startRecording = useLoopStore((state) => state.startRecording);
+  const stopRecording = useLoopStore((state) => state.stopRecording);
 
   if (!track) {
-    console.error(`Invalid track index: ${trackIndex}`, tracks);
+    console.error(`Invalid track index: ${trackIndex}`, track);
     return null;
   }
 

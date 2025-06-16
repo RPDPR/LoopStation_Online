@@ -1,10 +1,12 @@
 import { useState, useRef, useEffect } from "react";
+import { useLoopStore } from "@data/store/LoopStore.ts";
 import { Minus, Plus } from "lucide-react";
-import { useLoopStore } from "../../../../data/store/LoopStore.ts";
 
 export const BpmAdjuster = () => {
-  const { setBpm } = useLoopStore();
-  const [bpm, sBpm] = useState(120);
+  const storeBpm = useLoopStore((state) => state.bpm);
+  const setBpm = useLoopStore((state) => state.setBpm);
+
+  const [bpm, sBpm] = useState(storeBpm ?? 120);
   const timeoutRef = useRef<number | null>(null);
   const isHoldingRef = useRef(false);
   const isEditingRef = useRef(false);

@@ -1,124 +1,24 @@
 import { create } from "zustand";
 import * as Tone from "tone";
+import { FXUtils } from "@data/store/audioUtils/main.ts";
 import {
   BundleID,
   BundleName,
   BundleIsSelected,
   BundleParams,
+  Bundle,
   Fxs,
   FxID,
   FxName,
   FxIsSelected,
-  OutputGain,
-  DryWet,
+  BOG_GainValue,
+  BDW_DryWetValue,
   T_FX_Node,
+  T_FX_Node_Elem,
+  FXStore,
 } from "@data/store/FXStoreTypes.ts";
-import { FX_ID, FX_NAME } from "@data/store/FX_ParamsTypes.ts";
 import { FX_PARAMS_DEFAULTS } from "@data/store/FX_ParamsTypes.ts";
-import { FXUtils } from "@data/store/audioUtils/main.ts";
 
-// TYPES DEFINITION /////
-type T_bundleOutputGain = {
-  gainValue: number;
-  gainNode: Tone.ToneAudioNode;
-  min: number;
-  max: number;
-  step?: number;
-};
-type T_bundleDryWet = {
-  dryWetValue: number;
-  dryWetNode: Tone.ToneAudioNode;
-  min: number;
-  max: number;
-  step?: number;
-};
-
-export interface Bundle {
-  bundleID: number;
-  bundleName: string;
-  bundleIsSelected: boolean;
-  bundleParams: {
-    fxs: {
-      fxID: FX_ID;
-      fxName: FX_NAME;
-      fxIsSelected: boolean;
-      fxNode: Tone.ToneAudioNode | null;
-    }[];
-    outputGain: T_bundleOutputGain;
-    dryWet: T_bundleDryWet;
-  };
-}
-// TYPES DEFINITION /////
-
-interface FXStore {
-  // BUNDLE EDITING /////
-  bundleArray: Bundle[];
-  getBundle: (bundleID: BundleID) => Bundle;
-  addBundle: () => void;
-  setBundleSelection: (
-    bundleID: BundleID,
-    isSelected: BundleIsSelected
-  ) => void;
-  setBundleName: (bundleID: BundleID, bundleName: BundleName) => void;
-  setBundleParams: (
-    bundleID: BundleID,
-    params: {
-      gainValue?: OutputGain["gainValue"];
-      dryWetValue?: DryWet["dryWetValue"];
-    }
-  ) => void;
-  // BUNDLE EDITING /////
-
-  // FX EDITING /////
-  addFX: (bundleID: BundleID, fxID: FxID, fxName: FxName) => void;
-  setFXSelection: (
-    bundleID: BundleID,
-    fxID: FxID,
-    isSelected: FxIsSelected
-  ) => void;
-  updateFXParams: (
-    bundleID: BundleID,
-    fxID: FxID,
-    FX_Params: T_FX_Node[keyof T_FX_Node]
-  ) => void;
-  // FX EDITING /////
-
-  // FX /////
-  autoPanner_FX: (
-    bundleID: BundleID,
-    FX_Params: T_FX_Node["AUTOPANNER"]
-  ) => void;
-  reverb_FX: (bundleID: BundleID, FX_Params: T_FX_Node["REVERB"]) => void;
-  distortion_FX: (
-    bundleID: BundleID,
-    FX_Params: T_FX_Node["DISTORTION"]
-  ) => void;
-  chebyshev_FX: (bundleID: BundleID, FX_Params: T_FX_Node["CHEBYSHEV"]) => void;
-  feedbackDelay_FX: (
-    bundleID: BundleID,
-    FX_Params: T_FX_Node["FEEDBACKDELAY"]
-  ) => void;
-  pitchShift_FX: (
-    bundleID: BundleID,
-    FX_Params: T_FX_Node["PITCHSHIFT"]
-  ) => void;
-  bitCrusher_FX: (
-    bundleID: BundleID,
-    FX_Params: T_FX_Node["BITCRUSHER"]
-  ) => void;
-  phaser_FX: (bundleID: BundleID, FX_Params: T_FX_Node["PHASER"]) => void;
-  frequencyShifter_FX: (
-    bundleID: BundleID,
-    FX_Params: T_FX_Node["FREQUENCYSHIFTER"]
-  ) => void;
-  tremolo_FX: (bundleID: BundleID, FX_Params: T_FX_Node["TREMOLO"]) => void;
-  EQ3_FX: (bundleID: BundleID, FX_Params: T_FX_Node["EQ3"]) => void;
-  compressor_FX: (
-    bundleID: BundleID,
-    FX_Params: T_FX_Node["COMPRESSOR"]
-  ) => void;
-  // FX /////
-}
 export const useFXStore = create<FXStore>((set, get) => ({
   bundleArray: [],
   getBundle: (bundleID: BundleID) => {
@@ -187,8 +87,8 @@ export const useFXStore = create<FXStore>((set, get) => ({
   setBundleParams: (
     bundleID: BundleID,
     params: {
-      gainValue?: OutputGain["gainValue"];
-      dryWetValue?: DryWet["dryWetValue"];
+      gainValue?: BOG_GainValue;
+      dryWetValue?: BDW_DryWetValue;
     }
   ) => {
     set((state) => {
@@ -253,6 +153,26 @@ export const useFXStore = create<FXStore>((set, get) => ({
       return { bundleArray: newBundleArray };
     });
   },
+  deleteFX: (bundleID: BundleID, fxID: FxID) => {
+    set((state) => {
+      const newBundleArray = [...state.bundleArray];
+      const bundle = newBundleArray[bundleID];
+
+      const fxIndex = bundle.bundleParams.fxs.findIndex(
+        (fx) => fx.fxID === fxID
+      );
+
+      if (fxIndex < 0) return { bundleArray: newBundleArray };
+
+      bundle.bundleParams.fxs.splice(fxIndex, 1);
+
+      newBundleArray[bundleID] = {
+        ...bundle,
+      };
+
+      return { bundleArray: newBundleArray };
+    });
+  },
   setFXSelection: (
     bundleID: BundleID,
     fxID: FxID,
@@ -282,7 +202,7 @@ export const useFXStore = create<FXStore>((set, get) => ({
   updateFXParams(
     bundleID: BundleID,
     fxID: FxID,
-    FX_Params: T_FX_Node[keyof T_FX_Node] = {} as T_FX_Node[keyof T_FX_Node]
+    FX_Params: T_FX_Node_Elem = {} as T_FX_Node_Elem
   ) {
     switch (fxID) {
       case "AUTOPANNER":

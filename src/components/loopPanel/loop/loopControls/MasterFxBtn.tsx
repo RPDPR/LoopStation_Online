@@ -1,7 +1,11 @@
-import React from "react";
-import { useState } from "react";
+import { FC, useState } from "react";
+import { TrackIndex } from "@data/store/LoopStoreTypes.ts";
 
-export const MasterFxBtn: React.FC<{ trackIndex: number }> = () => {
+export type T_MasterFxBtn = {
+  trackIndex: TrackIndex;
+};
+
+export const MasterFxBtn: FC<T_MasterFxBtn> = ({ trackIndex }) => {
   const [isActive, setIsActive] = useState<boolean>(false);
   const handleClick = () => {
     setIsActive(!isActive);

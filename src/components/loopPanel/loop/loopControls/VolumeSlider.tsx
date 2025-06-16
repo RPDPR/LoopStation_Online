@@ -1,25 +1,26 @@
-import React from "react";
-import { useState } from "react";
-import { useLoopStore } from "../../../../data/store/LoopStore.ts";
+import { FC, useState } from "react";
+import { useLoopStore } from "@data/store/LoopStore.ts";
+import { TrackIndex } from "@data/store/LoopStoreTypes.ts";
 
-export const VolumeSlider: React.FC<{ trackIndex: number }> = ({
-  trackIndex,
-}) => {
-  const { tracks, changeVolume } = useLoopStore();
-  const [volume, setVolume] = useState<number>(100);
+export type T_VolumeSlider = {
+  trackIndex: TrackIndex;
+};
+
+export const VolumeSlider: FC<T_VolumeSlider> = ({ trackIndex }) => {
+  const track = useLoopStore((state) => state.trackArray[trackIndex]);
+  const changeVolume = useLoopStore((state) => state.changeVolume);
+
+  const [volume, setVolume] = useState<number>(track.volume ?? 100);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const track = tracks?.[trackIndex];
-
     if (!track) {
-      console.error(`Invalid track index: ${trackIndex}`, tracks);
-      return null;
+      console.error(`Invalid track index: ${trackIndex}`, track);
+      return;
     }
+    const newVolume = Number(e.target.value);
 
-    //main
-    setVolume(Number(e.target.value));
-    changeVolume(trackIndex, Number(e.target.value));
-    //main
+    setVolume(newVolume);
+    changeVolume(trackIndex, newVolume);
   };
 
   return (

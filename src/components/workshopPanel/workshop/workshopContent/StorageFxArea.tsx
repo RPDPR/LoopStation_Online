@@ -1,8 +1,9 @@
-import { BundleCard } from "./storageFxContent/BundleCard.tsx";
-import { BundleCard_Blank } from "./storageFxContent/BundleCard_Blank.tsx";
-import { useFXStore } from "../../../../data/store/FXStore.ts";
+import { FC } from "react";
+import { BundleCard } from "@workshop/workshopContent/storageFxContent/BundleCard.tsx";
+import { BundleCard_Blank } from "@workshop/workshopContent/storageFxContent/BundleCard_Blank.tsx";
+import { useFXStore } from "@data/store/FXStore.ts";
 
-export const StorageFxArea: React.FC = () => {
+export const StorageFxArea: FC = () => {
   const bundleArray = useFXStore((state) => state.bundleArray);
 
   return (

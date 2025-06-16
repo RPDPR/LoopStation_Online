@@ -1,13 +1,12 @@
-import React from "react";
-import { useFXStore } from "../../../../../../data/store/FXStore.ts";
+import { FC } from "react";
+import { useFXStore } from "@data/store/FXStore.ts";
+import { BundleID } from "@data/store/FXStoreTypes.ts";
 
 type T_BundleHeader = {
-  bundleSelectedID: number;
+  bundleSelectedID: BundleID;
 };
 
-export const BundleHeader: React.FC<T_BundleHeader> = ({
-  bundleSelectedID,
-}) => {
+export const BundleHeader: FC<T_BundleHeader> = ({ bundleSelectedID }) => {
   const setBundleName = useFXStore((state) => state.setBundleName);
   const bundleArray = useFXStore((state) => state.bundleArray);
   const bundle = bundleArray[bundleSelectedID];
@@ -22,7 +21,8 @@ export const BundleHeader: React.FC<T_BundleHeader> = ({
     } else if (String(e.target.value).length > 0) {
       setBundleName(bundle.bundleID, String(e.target.value));
     }
-    return (e.target.value = "");
+    e.target.value = "";
+    return;
   };
 
   return (

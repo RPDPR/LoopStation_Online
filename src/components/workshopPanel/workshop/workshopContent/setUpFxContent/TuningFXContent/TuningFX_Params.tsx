@@ -1,4 +1,4 @@
-import { ChangeEvent, FC } from "react";
+import { FC, ChangeEvent } from "react";
 import { useFXStore } from "@data/store/FXStore.ts";
 import { BundleID, FxID, T_FX_Node } from "@data/store/FXStoreTypes.ts";
 import { FXUtils } from "@data/store/audioUtils/main.ts";

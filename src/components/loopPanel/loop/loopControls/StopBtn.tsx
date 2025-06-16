@@ -1,9 +1,14 @@
-import React from "react";
+import { FC } from "react";
+import { useLoopStore } from "@data/store/LoopStore.ts";
+import { TrackIndex } from "@data/store/LoopStoreTypes.ts";
 import { Square } from "lucide-react";
-import { useLoopStore } from "../../../../data/store/LoopStore.ts";
 
-export const StopBtn: React.FC<{ trackIndex: number }> = ({ trackIndex }) => {
-  const { stopLoop } = useLoopStore();
+export type T_StopBtn = {
+  trackIndex: TrackIndex;
+};
+
+export const StopBtn: FC<T_StopBtn> = ({ trackIndex }) => {
+  const stopLoop = useLoopStore((state) => state.stopLoop);
   const handleClick = () => {
     stopLoop(trackIndex);
   };
