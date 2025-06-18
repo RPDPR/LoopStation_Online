@@ -1,25 +1,19 @@
 import { FC } from "react";
 import { CreateFxArea } from "./workshopContent/CreateFxArea.tsx";
 import { SetUpFxArea } from "./workshopContent/SetUpFxArea.tsx";
-import { SetUpTrackBundleArea } from "./workshopContent/SetUpTrackBundleArea.tsx";
+import { SetUpBundleArea } from "./workshopContent/SetUpBundleArea.tsx";
+import { SetUpTrackArea } from "./workshopContent/SetUpTrackArea.tsx";
 import { StorageFxArea } from "./workshopContent/StorageFxArea.tsx";
 
 export const Workshop: FC = () => {
   return (
-    <div className="mx-auto w-full h-full rounded-2xl grid grid-cols-[4fr_fr] grid-rows-[3fr_1fr] gap-x-3">
-      <div className="w-full h-full grid grid-cols-[1fr_2fr] grid-rows-[3fr_1fr] gap-x-3">
-        <div>
-          <CreateFxArea />
-        </div>
-        <div>
-          <SetUpFxArea />
-        </div>
-        <div>
-          <StorageFxArea />
-        </div>
-      </div>
-      <div>
-        <SetUpTrackBundleArea />
+    <div className="mx-auto w-full h-full rounded-2xl grid gap-x-3 gap-y-4 grid-cols-9 grid-rows-[3fr_1fr]">
+      <CreateFxArea />
+      <SetUpFxArea />
+      <StorageFxArea />
+      <div className="h-full w-full grid grid-cols-1 grid-rows-[1fr_1fr] col-span-2 col-start-8 row-start-1 row-span-2 gap-y-3">
+        <SetUpBundleArea />
+        <SetUpTrackArea />
       </div>
     </div>
   );

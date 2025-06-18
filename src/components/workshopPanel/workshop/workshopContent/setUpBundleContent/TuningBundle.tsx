@@ -19,7 +19,7 @@ export const TuningBundle: FC = () => {
         </div>
       ) : (
         <div className="w-full h-full bg-[#353535] border-2 border-black/10 rounded-lg inset-shadow-[0_0_20px_rgba(20,20,20,0.3)] overflow-hidden flex flex-col justify-center items-center text-center text-sm px-5">
-          {Consts.SetUpFxArea.TuningBundle.fillerText_1}
+          {Consts.SetUpBundleArea.TuningBundle.fillerText_1}
         </div>
       )}
     </div>
