@@ -22,8 +22,12 @@ import {
   bundleContainerTypesArray,
   trackIndexArray,
   System_Bpm,
+  Track_IsSelected,
   Track_Buffer,
   Track_Volume,
+  Track_OG_Value,
+  Track_DW_Value,
+  Track_Params,
   Metronome_Bpm,
   Metronome_Measure,
   Metronome_NoteValue,
@@ -35,6 +39,25 @@ export const useLoopStore = create<LoopStore>((set, get) => ({
   trackArray: Array.from(
     { length: 5 },
     (): Track => ({
+      trackIsSelected: false,
+      trackParams: {
+        outputGain: {
+          value: 50,
+          nodeValue: 1,
+          node: new Tone.Gain(1),
+          min: 0,
+          max: 100,
+          step: 0.1,
+        },
+        dryWet: {
+          value: 50,
+          nodeValue: 0.5,
+          nodes: { dryGain: new Tone.Gain(0.5), wetGain: new Tone.Gain(0.5) },
+          min: 0,
+          max: 100,
+          step: 0.1,
+        },
+      },
       state_rec: LoopState_Rec.Idle,
       state_pause: LoopState_Pause.Playing,
       state_trackFX: LoopState_TrackFX.Off,
@@ -64,6 +87,64 @@ export const useLoopStore = create<LoopStore>((set, get) => ({
     bundleContainerType: "INPUTFX",
     containerFxBundles: [],
   } as InputFX,
+
+  setTrackSelection: (trackIndex: TrackIndex, isSelected: Track_IsSelected) => {
+    set((state) => {
+      const newTrackArray = [...state.trackArray];
+
+      if (newTrackArray[trackIndex]) {
+        newTrackArray[trackIndex] = {
+          ...newTrackArray[trackIndex],
+          trackIsSelected: isSelected,
+        };
+      }
+
+      return { trackArray: newTrackArray };
+    });
+  },
+  setTrackParams: (
+    trackIndex: TrackIndex,
+    params: {
+      gainValue?: Track_OG_Value;
+      dryWetValue?: Track_DW_Value;
+    }
+  ) => {
+    set((state) => {
+      const newTrackArray = [...state.trackArray];
+      const track = newTrackArray[trackIndex];
+      const newTrackParams: Track_Params = {
+        ...track.trackParams,
+      };
+
+      if (params.gainValue !== undefined) {
+        const gainNodeValue =
+          params.gainValue <= 50
+            ? params.gainValue / 50
+            : 1 + (params.gainValue - 50) * 0.06;
+
+        newTrackParams.outputGain = {
+          ...newTrackParams.outputGain,
+          value: params.gainValue,
+          nodeValue: gainNodeValue,
+        };
+      }
+
+      if (params.dryWetValue !== undefined) {
+        const dryWetNodeValue = params.dryWetValue / 100;
+        newTrackParams.dryWet = {
+          ...newTrackParams.dryWet,
+          value: params.dryWetValue,
+          nodeValue: dryWetNodeValue,
+        };
+      }
+
+      newTrackArray[trackIndex] = {
+        ...track,
+        trackParams: newTrackParams,
+      };
+      return { trackArray: newTrackArray };
+    });
+  },
 
   updateFxBundlesContainer: (
     bundleContainerType: BundleContainerTypesElem,
@@ -334,7 +415,9 @@ export const useLoopStore = create<LoopStore>((set, get) => ({
                   { trackFX: get().trackFX, masterFX: get().masterFX },
                   { includeTrackFxNodes: true, includeMasterFxNodes: true }
                 )
-              : []
+              : [],
+            track.trackParams.dryWet.nodeValue,
+            track.trackParams.outputGain.nodeValue
           );
 
           newPlayer.start(startTime);
@@ -374,7 +457,9 @@ export const useLoopStore = create<LoopStore>((set, get) => ({
               { trackFX: get().trackFX, masterFX: get().masterFX },
               { includeTrackFxNodes: true, includeMasterFxNodes: true }
             )
-          : []
+          : [],
+        track.trackParams.dryWet.nodeValue,
+        track.trackParams.outputGain.nodeValue
       );
 
       newPlayer.start();
@@ -482,8 +567,6 @@ export const useLoopStore = create<LoopStore>((set, get) => ({
       const track = newTrackArray[trackIndex];
 
       if (!track.player) return { trackArray: newTrackArray };
-      if (track.state_trackFX === LoopState_TrackFX.Off)
-        return { trackArray: newTrackArray };
 
       const trackFxNodes = loopUtils.getTrackFxNodes(
         trackIndex,
@@ -499,11 +582,25 @@ export const useLoopStore = create<LoopStore>((set, get) => ({
         }
       );
       console.log(trackFxNodes);
-      track.player.disconnect();
-      if (trackFxNodes.length > 0) {
-        track.player.chain(...trackFxNodes, Tone.getDestination());
+
+      if (track.state_trackFX !== LoopState_TrackFX.Off) {
+        track.player = loopUtils.applyParamsToTrack(
+          track.player,
+          trackFxNodes,
+          track.trackParams.dryWet.nodeValue,
+          track.trackParams.outputGain.nodeValue,
+          track.trackParams.dryWet.nodes,
+          track.trackParams.outputGain.node
+        );
       } else {
-        track.player.toDestination();
+        track.player = loopUtils.applyParamsToTrack(
+          track.player,
+          null,
+          track.trackParams.dryWet.nodeValue,
+          track.trackParams.outputGain.nodeValue,
+          track.trackParams.dryWet.nodes,
+          track.trackParams.outputGain.node
+        );
       }
 
       newTrackArray[trackIndex] = {
@@ -538,15 +635,24 @@ export const useLoopStore = create<LoopStore>((set, get) => ({
         { includeTrackFxNodes: true }
       );
 
-      track.player.disconnect();
-
-      if (
-        track.state_trackFX === LoopState_TrackFX.Off &&
-        trackFxNodes.length > 0
-      ) {
-        track.player.chain(...trackFxNodes, Tone.getDestination());
+      if (track.state_trackFX === LoopState_TrackFX.Off) {
+        track.player = loopUtils.applyParamsToTrack(
+          track.player,
+          trackFxNodes,
+          track.trackParams.dryWet.nodeValue,
+          track.trackParams.outputGain.nodeValue,
+          track.trackParams.dryWet.nodes,
+          track.trackParams.outputGain.node
+        );
       } else {
-        track.player.toDestination();
+        track.player = loopUtils.applyParamsToTrack(
+          track.player,
+          null,
+          track.trackParams.dryWet.nodeValue,
+          track.trackParams.outputGain.nodeValue,
+          track.trackParams.dryWet.nodes,
+          track.trackParams.outputGain.node
+        );
       }
 
       newTrackArray[trackIndex] = {

@@ -5,14 +5,12 @@ import {
   BundleID,
   BundleName,
   BundleIsSelected,
-  BundleParams,
+  // BundleParams,
   Bundle,
   Fxs,
   FxID,
   FxName,
   FxIsSelected,
-  BOG_GainValue,
-  BDW_DryWetValue,
   T_FX_Node,
   T_FX_Node_Elem,
   FXStore,
@@ -34,20 +32,6 @@ export const useFXStore = create<FXStore>((set, get) => ({
         bundleIsSelected: false,
         bundleParams: {
           fxs: [],
-          outputGain: {
-            gainValue: 50,
-            gainNode: new Tone.Gain(1),
-            min: 0,
-            max: 100,
-            step: 0.1,
-          },
-          dryWet: {
-            dryWetValue: 50,
-            dryWetNode: new Tone.CrossFade(0.5),
-            min: 0,
-            max: 100,
-            step: 0.1,
-          },
         },
       };
 
@@ -81,50 +65,6 @@ export const useFXStore = create<FXStore>((set, get) => ({
         };
       }
 
-      return { bundleArray: newBundleArray };
-    });
-  },
-  setBundleParams: (
-    bundleID: BundleID,
-    params: {
-      gainValue?: BOG_GainValue;
-      dryWetValue?: BDW_DryWetValue;
-    }
-  ) => {
-    set((state) => {
-      const newBundleArray = [...state.bundleArray];
-      const bundle = newBundleArray[bundleID];
-      const newBundleParams: BundleParams = {
-        ...bundle.bundleParams,
-      };
-
-      if (params.gainValue !== undefined) {
-        const gainValue =
-          params.gainValue <= 50
-            ? params.gainValue / 50
-            : 1 + (params.gainValue - 50) * 0.06;
-
-        const gain = new Tone.Gain(gainValue);
-        newBundleParams.outputGain = {
-          ...newBundleParams.outputGain,
-          gainValue: params.gainValue,
-          gainNode: gain,
-        };
-      }
-
-      if (params.dryWetValue !== undefined) {
-        const dryWet = new Tone.CrossFade(params.dryWetValue / 100);
-        newBundleParams.dryWet = {
-          ...newBundleParams.dryWet,
-          dryWetValue: params.dryWetValue,
-          dryWetNode: dryWet,
-        };
-      }
-
-      newBundleArray[bundleID] = {
-        ...bundle,
-        bundleParams: newBundleParams,
-      };
       return { bundleArray: newBundleArray };
     });
   },

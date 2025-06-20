@@ -1,5 +1,12 @@
 import { Bundle } from "@data/store/FXStoreTypes.ts";
-import { Recorder, ToneAudioBuffer, Player, Clock, NoiseSynth } from "tone";
+import {
+  Recorder,
+  ToneAudioBuffer,
+  Gain,
+  Player,
+  Clock,
+  NoiseSynth,
+} from "tone";
 
 // Main LoopStore types /////
 export type TrackIndexArray = [0, 1, 2, 3, 4];
@@ -50,11 +57,49 @@ export type System_Bpm = number;
 export type System_Measure = number;
 
 // Track types /////
+export type Track_IsSelected = boolean;
 export type Track_Recorder = Recorder;
 export type Track_Buffer = ToneAudioBuffer | null;
 export type Track_Player = Player | null;
 export type Track_Volume = number;
 export type Track_Length = number | null;
+
+// Track params types /////
+export type Track_OG_Value = number;
+export type Track_OG_NodeValue = number;
+export type Track_OG_Node = Gain;
+export type Track_OG_Min = number;
+export type Track_OG_Max = number;
+export type Track_OG_Step = number;
+
+export type Track_DW_Value = number;
+export type Track_DW_NodeValue = number;
+export type Track_DW_Nodes = { dryGain: Gain; wetGain: Gain };
+export type Track_DW_Min = number;
+export type Track_DW_Max = number;
+export type Track_DW_Step = number;
+
+export type TrackOutputGain = {
+  value: Track_OG_Value;
+  nodeValue: Track_OG_NodeValue;
+  node: Track_OG_Node;
+  min: Track_OG_Min;
+  max: Track_OG_Max;
+  step?: Track_OG_Step;
+};
+export type TrackDryWet = {
+  value: Track_DW_Value;
+  nodeValue: Track_DW_NodeValue;
+  nodes: Track_DW_Nodes;
+  min: Track_DW_Min;
+  max: Track_DW_Max;
+  step?: Track_DW_Step;
+};
+
+export type Track_Params = {
+  outputGain: TrackOutputGain;
+  dryWet: TrackDryWet;
+};
 
 // Metronome types /////
 export type Metronome_Bpm = number | null;
@@ -66,6 +111,9 @@ export type Metronome_Volume = number;
 
 // Main LoopStore interfaces /////
 export interface Track {
+  trackIsSelected: Track_IsSelected;
+  trackParams: Track_Params;
+
   state_rec: LoopState_Rec;
   state_pause: LoopState_Pause;
   state_trackFX: LoopState_TrackFX;
@@ -118,6 +166,18 @@ export interface LoopStore {
   trackFX: TrackFX[];
   masterFX: MasterFX;
   inputFX: InputFX;
+
+  setTrackSelection: (
+    trackIndex: TrackIndex,
+    isSelected: Track_IsSelected
+  ) => void;
+  setTrackParams: (
+    trackIndex: TrackIndex,
+    params: {
+      gainValue?: Track_OG_Value;
+      dryWetValue?: Track_DW_Value;
+    }
+  ) => void;
 
   updateFxBundlesContainer: (
     bundleContainerType: BundleContainerTypesElem,

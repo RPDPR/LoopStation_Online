@@ -11,6 +11,10 @@ import {
   MasterFX,
   InputFX,
   ContainerFxBundle,
+  Track_DW_NodeValue,
+  Track_OG_NodeValue,
+  Track_DW_Nodes,
+  Track_OG_Node,
 } from "@data/store/LoopStoreTypes.ts";
 
 export const FXUtils = {
@@ -170,50 +174,92 @@ export const loopUtils = {
         bundleContainers.trackFX[trackIndex].containerFxBundles;
       trackFxBundles.forEach((bundle) => {
         bundle.bundleParams.fxs.forEach((fx) => fxNodes.push(fx.fxNode!));
-        // fxNodes.push(bundle.bundleParams.dryWet.dryWetNode);
-        fxNodes.push(bundle.bundleParams.outputGain.gainNode);
       });
     }
 
     if (includeMasterFxNodes && bundleContainers.masterFX) {
       bundleContainers.masterFX.containerFxBundles.forEach((bundle) => {
         bundle.bundleParams.fxs.forEach((fx) => fxNodes.push(fx.fxNode!));
-        // fxNodes.push(bundle.bundleParams.dryWet.dryWetNode);
-        fxNodes.push(bundle.bundleParams.outputGain.gainNode);
       });
     }
 
     if (includeInputFxNodes && bundleContainers.inputFX) {
       bundleContainers.inputFX.containerFxBundles.forEach((bundle) => {
         bundle.bundleParams.fxs.forEach((fx) => fxNodes.push(fx.fxNode!));
-        // fxNodes.push(bundle.bundleParams.dryWet.dryWetNode);
-        fxNodes.push(bundle.bundleParams.outputGain.gainNode);
       });
     }
-
     return fxNodes;
   },
 
   createPlayer: (
     buffer: Tone.ToneAudioBuffer,
     volume: number,
-    fxNodesArray: Tone.ToneAudioNode[] | null
+    fxNodesArray: Tone.ToneAudioNode[] | null,
+    track_DW_nodeValue: Track_DW_NodeValue,
+    track_OG_nodeValue: Track_OG_NodeValue
   ) => {
-    const player = new Tone.Player(
-      new Tone.ToneAudioBuffer(buffer)
-    ).toDestination();
+    // player creating /////
+    const player = new Tone.Player(new Tone.ToneAudioBuffer(buffer));
     player.loop = true;
+    player.disconnect();
 
+    // player Volume /////
     const minDb = -40;
     const volumeDb =
       volume === 0 ? -Infinity : minDb + (volume / 100) * Math.abs(minDb);
 
     player.volume.value = volumeDb;
 
-    if (fxNodesArray) {
-      player.disconnect();
-      player.chain(...fxNodesArray, Tone.getDestination());
+    // player outputGain /////
+    const gainNode = new Tone.Gain(track_OG_nodeValue);
+
+    // player dryWet /////
+    const dryGain = new Tone.Gain(1 - track_DW_nodeValue);
+    const wetGain = new Tone.Gain(track_DW_nodeValue);
+
+    player.fan(dryGain, wetGain);
+
+    if (fxNodesArray && fxNodesArray.length) {
+      wetGain.chain(...fxNodesArray, gainNode);
+    } else {
+      wetGain.connect(gainNode);
     }
+    dryGain.connect(gainNode);
+
+    gainNode.toDestination();
+
+    return player;
+  },
+
+  applyParamsToTrack: (
+    player: Tone.Player,
+    fxNodesArray: Tone.ToneAudioNode[] | null,
+    track_DW_nodeValue: Track_DW_NodeValue,
+    track_OG_nodeValue: Track_OG_NodeValue,
+    track_DW_nodes: Track_DW_Nodes,
+    track_OG_node: Track_OG_Node
+  ) => {
+    // player disconnecting /////
+    player.disconnect();
+    track_DW_nodes.dryGain.disconnect();
+    track_DW_nodes.wetGain.disconnect();
+    track_OG_node.disconnect();
+
+    // params setting /////
+    track_DW_nodes.dryGain.set({ gain: 1 - track_DW_nodeValue });
+    track_DW_nodes.wetGain.set({ gain: track_DW_nodeValue });
+    track_OG_node.set({ gain: track_OG_nodeValue });
+
+    player.fan(track_DW_nodes.dryGain, track_DW_nodes.wetGain);
+
+    if (fxNodesArray?.length) {
+      track_DW_nodes.wetGain.chain(...fxNodesArray, track_OG_node);
+    } else {
+      track_DW_nodes.wetGain.connect(track_OG_node);
+    }
+    track_DW_nodes.dryGain.connect(track_OG_node);
+
+    track_OG_node.toDestination();
 
     return player;
   },
@@ -224,18 +270,6 @@ export const loopUtils = {
         bundleID: -1,
         bundleParams: {
           fxs: [],
-          outputGain: {
-            gainValue: -1,
-            gainNode: new Tone.Gain(1),
-            min: 0,
-            max: 1,
-          },
-          dryWet: {
-            dryWetValue: -1,
-            dryWetNode: new Tone.CrossFade(0.5),
-            min: 0,
-            max: 1,
-          },
         },
       };
     }

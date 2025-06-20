@@ -1,34 +1,6 @@
 import { FX_ParamsTypes, FX_ID, FX_NAME } from "@data/store/FX_ParamsTypes.ts";
 import { ToneAudioNode } from "tone";
 
-// TYPES DEFINITION /////
-export type BOG_GainValue = number;
-export type BOG_GainNode = ToneAudioNode;
-export type BOG_Min = number;
-export type BOG_Max = number;
-export type BOG_Step = number;
-
-export type BDW_DryWetValue = number;
-export type BDW_DryWetNode = ToneAudioNode;
-export type BDW_Min = number;
-export type BDW_Max = number;
-export type BDW_Step = number;
-
-export type BundleOutputGain = {
-  gainValue: BOG_GainValue;
-  gainNode: BOG_GainNode;
-  min: BOG_Min;
-  max: BOG_Max;
-  step?: BOG_Step;
-};
-export type BundleDryWet = {
-  dryWetValue: BDW_DryWetValue;
-  dryWetNode: BDW_DryWetNode;
-  min: BDW_Min;
-  max: BDW_Max;
-  step?: BDW_Step;
-};
-
 // Bundle types /////
 export type BundleID = number;
 export type BundleName = string;
@@ -47,8 +19,6 @@ export type Fxs = {
 }[];
 export type BundleParams = {
   fxs: Fxs;
-  outputGain: BundleOutputGain;
-  dryWet: BundleDryWet;
 };
 
 export interface Bundle {
@@ -97,13 +67,6 @@ export interface FXStore {
     isSelected: BundleIsSelected
   ) => void;
   setBundleName: (bundleID: BundleID, bundleName: BundleName) => void;
-  setBundleParams: (
-    bundleID: BundleID,
-    params: {
-      gainValue?: BOG_GainValue;
-      dryWetValue?: BDW_DryWetValue;
-    }
-  ) => void;
   // BUNDLE EDITING /////
 
   // FX EDITING /////
