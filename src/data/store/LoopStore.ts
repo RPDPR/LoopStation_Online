@@ -1,7 +1,6 @@
 import { create } from "zustand";
 import * as Tone from "tone";
 import { loopUtils } from "./audioUtils/main.ts";
-import { useFXStore } from "@data/store/FXStore.ts";
 import {
   LoopState_Rec,
   LoopState_Pause,
@@ -10,17 +9,7 @@ import {
   LoopState_InputFX,
   TrackArray,
   Track,
-  TrackFX,
-  MasterFX,
-  InputFX,
   TrackIndex,
-  ContainerFxBundle,
-  ContainerFxBundleID,
-  ContainerFxBundleParams,
-  BundleContainerTypesElem,
-  OperationTypeElem,
-  bundleContainerTypesArray,
-  trackIndexArray,
   System_Bpm,
   Track_IsSelected,
   Track_Buffer,
@@ -70,23 +59,6 @@ export const useLoopStore = create<LoopStore>((set, get) => ({
       length: null,
     })
   ) as TrackArray,
-
-  trackFX: Array.from(
-    { length: 5 },
-    () =>
-      ({
-        bundleContainerType: "TRACKFX",
-        containerFxBundles: [],
-      } as TrackFX)
-  ),
-  masterFX: {
-    bundleContainerType: "MASTERFX",
-    containerFxBundles: [],
-  } as MasterFX,
-  inputFX: {
-    bundleContainerType: "INPUTFX",
-    containerFxBundles: [],
-  } as InputFX,
 
   setTrackSelection: (trackIndex: TrackIndex, isSelected: Track_IsSelected) => {
     set((state) => {
@@ -143,155 +115,6 @@ export const useLoopStore = create<LoopStore>((set, get) => ({
         trackParams: newTrackParams,
       };
       return { trackArray: newTrackArray };
-    });
-  },
-
-  updateFxBundlesContainer: (
-    bundleContainerType: BundleContainerTypesElem,
-    params: {
-      operationType?: OperationTypeElem;
-      trackIndex?: TrackIndex;
-      containerFxBundleID?: ContainerFxBundleID;
-      containerFxBundle?: ContainerFxBundle;
-      containerFxBundleParams?: ContainerFxBundleParams;
-    }
-  ) => {
-    set((state) => {
-      const operationType = params.operationType ?? "UPDATE";
-      const containerFxBundleID = params.containerFxBundleID ?? -1;
-      const containerFxBundle = params.containerFxBundle ?? null;
-      const containerFxBundleParams = params.containerFxBundleParams ?? null;
-      const trackIndex = params.trackIndex ?? -1;
-
-      const newContainerFxBundles = [
-        ...(bundleContainerType === "INPUTFX"
-          ? state.inputFX.containerFxBundles
-          : bundleContainerType === "MASTERFX"
-          ? state.masterFX.containerFxBundles
-          : state.trackFX[trackIndex].containerFxBundles),
-      ];
-
-      if (operationType === "DELETE" && containerFxBundleID != -1) {
-        const containerFxBundleIndex = newContainerFxBundles.findIndex(
-          (bndl) => bndl.bundleID === containerFxBundleID
-        );
-        if (containerFxBundleIndex !== -1) {
-          newContainerFxBundles.splice(containerFxBundleIndex, 1);
-        }
-      } else if (
-        operationType === "ADD" &&
-        containerFxBundle != null &&
-        containerFxBundle.bundleID != -1
-      ) {
-        const isNoBundleAlreadyExists =
-          newContainerFxBundles.findIndex(
-            (bndl) => bndl.bundleID == containerFxBundle.bundleID
-          ) >= 0
-            ? false
-            : true;
-        // console.log(isNoBundleAlreadyExists);
-        if (isNoBundleAlreadyExists && newContainerFxBundles.length <= 3) {
-          newContainerFxBundles.push(containerFxBundle);
-        } else {
-          console.error(
-            "A bundle with that name already exists or this container is already filled!"
-          );
-        }
-      } else if (
-        operationType === "UPDATE" &&
-        containerFxBundleID != -1 &&
-        containerFxBundleParams != null
-      ) {
-        const containerFxBundleIndex =
-          newContainerFxBundles.findIndex(
-            (bndl) => bndl.bundleID == containerFxBundleID
-          ) ?? -1;
-        if (containerFxBundleIndex !== -1) {
-          newContainerFxBundles[containerFxBundleIndex] = {
-            ...newContainerFxBundles[containerFxBundleIndex],
-            bundleParams: { ...containerFxBundleParams },
-          };
-          // console.log(state.trackFX[trackIndex].containerFxBundles);
-          console.log(
-            `In the ${
-              newContainerFxBundles[containerFxBundleIndex].bundleID
-            } bundleID containerBundle there are ${newContainerFxBundles[
-              containerFxBundleIndex
-            ].bundleParams.fxs.map((fx) => {
-              return fx.fxNode;
-            })} fxs!`
-          );
-          // console.log(
-          //   `Now here is a ${containerFxBundleParams.fxs.length} fxs in the bundle with ${containerFxBundleID} id. It's a ${bundleContainerType} tho)`
-          // );
-        } else {
-          // console.log(
-          //   `There is no bundle with that id exists in ${bundleContainerType}!`
-          // );
-        }
-      }
-
-      return {
-        ...(bundleContainerType === "INPUTFX"
-          ? {
-              inputFX: {
-                ...state.inputFX,
-                containerFxBundles: newContainerFxBundles,
-              },
-            }
-          : bundleContainerType === "MASTERFX"
-          ? {
-              masterFX: {
-                ...state.masterFX,
-                containerFxBundles: newContainerFxBundles,
-              },
-            }
-          : {
-              trackFX: state.trackFX.map((track, i) =>
-                i === trackIndex
-                  ? { ...track, containerFxBundles: newContainerFxBundles }
-                  : track
-              ),
-            }),
-      };
-    });
-  },
-
-  updateEntireFxBundleContainers: async (
-    containerFxBundleID: ContainerFxBundleID = -1
-  ) => {
-    const fxStore = useFXStore.getState();
-    const bundleArray = fxStore.bundleArray;
-    const containerFxBundleParams = bundleArray.find(
-      (bdl) => bdl.bundleID == containerFxBundleID
-    )?.bundleParams;
-
-    bundleContainerTypesArray.forEach((containerType) => {
-      if (containerType === "TRACKFX") {
-        trackIndexArray.forEach((trackIndex) => {
-          get().updateFxBundlesContainer(containerType, {
-            operationType: "UPDATE",
-            trackIndex: trackIndex,
-            containerFxBundleID: containerFxBundleID,
-            containerFxBundleParams: containerFxBundleParams,
-          });
-          get().updateTrackFXs(trackIndex);
-        });
-      }
-      if (containerType === "INPUTFX") {
-        get().updateFxBundlesContainer(containerType, {
-          operationType: "UPDATE",
-          containerFxBundleID: containerFxBundleID,
-          containerFxBundleParams: containerFxBundleParams,
-        });
-      }
-      if (containerType === "MASTERFX") {
-        get().updateFxBundlesContainer(containerType, {
-          operationType: "UPDATE",
-          containerFxBundleID: containerFxBundleID,
-          containerFxBundleParams: containerFxBundleParams,
-        });
-      }
     });
   },
 
@@ -410,11 +233,10 @@ export const useLoopStore = create<LoopStore>((set, get) => ({
             quantizedBuffer,
             track.volume,
             track.state_trackFX !== LoopState_TrackFX.Off
-              ? loopUtils.getTrackFxNodes(
-                  trackIndex,
-                  { trackFX: get().trackFX, masterFX: get().masterFX },
-                  { includeTrackFxNodes: true, includeMasterFxNodes: true }
-                )
+              ? loopUtils.getTrackFxNodes(trackIndex, {
+                  includeTrackFxNodes: true,
+                  includeMasterFxNodes: true,
+                })
               : [],
             track.trackParams.dryWet.nodeValue,
             track.trackParams.outputGain.nodeValue
@@ -452,11 +274,10 @@ export const useLoopStore = create<LoopStore>((set, get) => ({
         quantizedBuffer,
         track.volume,
         track.state_trackFX !== LoopState_TrackFX.Off
-          ? loopUtils.getTrackFxNodes(
-              trackIndex,
-              { trackFX: get().trackFX, masterFX: get().masterFX },
-              { includeTrackFxNodes: true, includeMasterFxNodes: true }
-            )
+          ? loopUtils.getTrackFxNodes(trackIndex, {
+              includeTrackFxNodes: true,
+              includeMasterFxNodes: true,
+            })
           : [],
         track.trackParams.dryWet.nodeValue,
         track.trackParams.outputGain.nodeValue
@@ -568,19 +389,11 @@ export const useLoopStore = create<LoopStore>((set, get) => ({
 
       if (!track.player) return { trackArray: newTrackArray };
 
-      const trackFxNodes = loopUtils.getTrackFxNodes(
-        trackIndex,
-        {
-          trackFX: state.trackFX,
-          masterFX: state.masterFX,
-          inputFX: state.inputFX,
-        },
-        {
-          includeTrackFxNodes: true,
-          includeMasterFxNodes: true,
-          includeInputFxNodes: true,
-        }
-      );
+      const trackFxNodes = loopUtils.getTrackFxNodes(trackIndex, {
+        includeTrackFxNodes: true,
+        includeMasterFxNodes: true,
+        includeInputFxNodes: true,
+      });
       console.log(trackFxNodes);
 
       if (track.state_trackFX !== LoopState_TrackFX.Off) {
@@ -607,17 +420,17 @@ export const useLoopStore = create<LoopStore>((set, get) => ({
         ...track,
         player: track.player,
       };
-      console.log(
-        `TrackIndex is ${trackIndex}. trackFxNodes: ${trackFxNodes}. ContainerFxBundles: ${state.trackFX[
-          trackIndex
-        ].containerFxBundles.map((contBndl) => {
-          return `${contBndl.bundleID}, ${contBndl.bundleParams.fxs.map(
-            (fx) => {
-              return fx.fxNode;
-            }
-          )}`;
-        })} `
-      );
+      // console.log(
+      //   `TrackIndex is ${trackIndex}. trackFxNodes: ${trackFxNodes}. ContainerFxBundles: ${state.trackFX[
+      //     trackIndex
+      //   ].containerFxBundles.map((contBndl) => {
+      //     return `${contBndl.bundleID}, ${contBndl.bundleParams.fxs.map(
+      //       (fx) => {
+      //         return fx.fxNode;
+      //       }
+      //     )}`;
+      //   })} `
+      // );
       return { trackArray: newTrackArray };
     });
   },
@@ -629,11 +442,9 @@ export const useLoopStore = create<LoopStore>((set, get) => ({
 
       if (!track.player) return { trackArray: newTrackArray };
 
-      const trackFxNodes = loopUtils.getTrackFxNodes(
-        trackIndex,
-        { trackFX: state.trackFX },
-        { includeTrackFxNodes: true }
-      );
+      const trackFxNodes = loopUtils.getTrackFxNodes(trackIndex, {
+        includeTrackFxNodes: true,
+      });
 
       if (track.state_trackFX === LoopState_TrackFX.Off) {
         track.player = loopUtils.applyParamsToTrack(

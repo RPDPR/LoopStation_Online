@@ -15,9 +15,9 @@ export const TrackFx_BundleCard: FC<T_TrackFx_BundleCard> = ({
   const { attributes, listeners, setNodeRef } = useDraggable({
     id: `containerFxBundle-${trackIndex}-${bundleID}`,
     data: {
-      bundleContainerType: "trackFX",
+      bundleContainerType: "TRACKFX",
       trackIndex: trackIndex,
-      containerFxBundleID: bundleID,
+      bundleID: bundleID,
     },
   });
 

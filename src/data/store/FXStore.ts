@@ -5,7 +5,9 @@ import {
   BundleID,
   BundleName,
   BundleIsSelected,
-  // BundleParams,
+  OperationTypeElem,
+  BundleContainerType,
+  BundleConnections,
   Bundle,
   Fxs,
   FxID,
@@ -15,6 +17,7 @@ import {
   T_FX_Node_Elem,
   FXStore,
 } from "@data/store/FXStoreTypes.ts";
+import { TrackIndex, trackIndexArray } from "@data/store/LoopStoreTypes.ts";
 import { FX_PARAMS_DEFAULTS } from "@data/store/FX_ParamsTypes.ts";
 
 export const useFXStore = create<FXStore>((set, get) => ({
@@ -32,6 +35,17 @@ export const useFXStore = create<FXStore>((set, get) => ({
         bundleIsSelected: false,
         bundleParams: {
           fxs: [],
+        },
+        bundleConnections: {
+          INPUTFX: false,
+          MASTERFX: false,
+          TRACKFX: {
+            0: false,
+            1: false,
+            2: false,
+            3: false,
+            4: false,
+          },
         },
       };
 
@@ -66,6 +80,93 @@ export const useFXStore = create<FXStore>((set, get) => ({
       }
 
       return { bundleArray: newBundleArray };
+    });
+  },
+  updateBundleConnections: (
+    bundleID: BundleID,
+    operationType: OperationTypeElem,
+    bundleContainerType: BundleContainerType,
+    trackIndex?: TrackIndex | -1
+  ) => {
+    set((state) => {
+      const newBundleArray = [...state.bundleArray];
+      let newBundleConnections = newBundleArray[bundleID].bundleConnections;
+      let trackBundleCount = {
+        "0": 0,
+        "1": 0,
+        "2": 0,
+        "3": 0,
+        "4": 0,
+      };
+      const allowOperation: Record<OperationTypeElem, boolean> = {
+        ADD: true,
+        DELETE: true,
+      };
+
+      newBundleArray.forEach((bundle) => {
+        Object.entries(bundle.bundleConnections.TRACKFX).forEach(
+          ([srcKey, srcValue]) => {
+            trackBundleCount = Object.fromEntries(
+              Object.entries(trackBundleCount).map(([countKey, countValue]) => {
+                if (countKey === String(trackIndex) && countValue >= 4)
+                  allowOperation.ADD = false;
+                if (srcValue && srcKey === countKey) {
+                  console.log(countKey, srcValue && srcKey === countKey);
+                }
+                return [
+                  countKey,
+                  srcValue && srcKey == countKey ? countValue + 1 : countValue,
+                ];
+              })
+            ) as typeof trackBundleCount;
+          }
+        );
+      });
+
+      if (operationType === "ADD" && allowOperation.ADD) {
+        newBundleConnections = Object.fromEntries(
+          Object.entries(newBundleConnections).map(([key, value]) => {
+            return [
+              key,
+              key === bundleContainerType
+                ? key === "TRACKFX"
+                  ? Object.fromEntries(
+                      Object.entries(value).map(([key, value]) => {
+                        return [key, key === String(trackIndex) ? true : value];
+                      })
+                    )
+                  : true
+                : value,
+            ];
+          })
+        ) as BundleConnections;
+      } else if (operationType === "DELETE") {
+        newBundleConnections = Object.fromEntries(
+          Object.entries(newBundleConnections).map(([key, value]) => {
+            return [
+              key,
+              key === bundleContainerType
+                ? key === "TRACKFX"
+                  ? Object.fromEntries(
+                      Object.entries(value).map(([key, value]) => {
+                        return [
+                          key,
+                          key === String(trackIndex) ? false : value,
+                        ];
+                      })
+                    )
+                  : false
+                : value,
+            ];
+          })
+        ) as BundleConnections;
+      }
+      console.log(newBundleConnections);
+      newBundleArray[bundleID].bundleConnections = newBundleConnections;
+
+      return {
+        bundleArray: newBundleArray,
+      };
     });
   },
 

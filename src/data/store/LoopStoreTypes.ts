@@ -127,28 +127,6 @@ export interface Track {
 }
 export type TrackArray = Track[];
 
-export interface TrackFX {
-  bundleContainerType: BundleContainerTypesElem;
-  containerFxBundles: {
-    bundleID: ContainerFxBundleID;
-    bundleParams: ContainerFxBundleParams;
-  }[];
-}
-export interface MasterFX {
-  bundleContainerType: BundleContainerTypesElem;
-  containerFxBundles: {
-    bundleID: ContainerFxBundleID;
-    bundleParams: ContainerFxBundleParams;
-  }[];
-}
-export interface InputFX {
-  bundleContainerType: BundleContainerTypesElem;
-  containerFxBundles: {
-    bundleID: ContainerFxBundleID;
-    bundleParams: ContainerFxBundleParams;
-  }[];
-}
-
 // Metronome /////
 export interface Metronome {
   bpm: Metronome_Bpm;
@@ -163,10 +141,6 @@ export interface Metronome {
 export interface LoopStore {
   trackArray: Track[];
 
-  trackFX: TrackFX[];
-  masterFX: MasterFX;
-  inputFX: InputFX;
-
   setTrackSelection: (
     trackIndex: TrackIndex,
     isSelected: Track_IsSelected
@@ -178,20 +152,6 @@ export interface LoopStore {
       dryWetValue?: Track_DW_Value;
     }
   ) => void;
-
-  updateFxBundlesContainer: (
-    bundleContainerType: BundleContainerTypesElem,
-    params: {
-      operationType?: OperationTypeElem;
-      trackIndex?: TrackIndex;
-      containerFxBundleID?: ContainerFxBundleID;
-      containerFxBundle?: ContainerFxBundle;
-      containerFxBundleParams?: ContainerFxBundleParams;
-    }
-  ) => void;
-  updateEntireFxBundleContainers: (
-    containerFxBundleID: ContainerFxBundleID
-  ) => Promise<void>;
 
   bpm: System_Bpm;
   measure: System_Measure;
@@ -226,17 +186,3 @@ export type ContainerFxBundle = {
   bundleID: Bundle["bundleID"];
   bundleParams: Bundle["bundleParams"];
 };
-
-export type ContainerFxBundleID = ContainerFxBundle["bundleID"];
-export type ContainerFxBundleParams = ContainerFxBundle["bundleParams"];
-export type BundleContainerTypes = ["INPUTFX", "TRACKFX", "MASTERFX"];
-export type BundleContainerTypesElem = BundleContainerTypes[number];
-
-export const bundleContainerTypesArray: BundleContainerTypes = [
-  "INPUTFX",
-  "TRACKFX",
-  "MASTERFX",
-];
-
-export type OperationTypes = ["ADD", "DELETE", "UPDATE"];
-export type OperationTypeElem = OperationTypes[number];

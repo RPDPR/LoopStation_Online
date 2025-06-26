@@ -15,20 +15,16 @@ import {
 } from "@dnd-kit/core";
 import { snapCenterToCursor } from "@dnd-kit/modifiers";
 import { useState } from "react";
+import { useFXStore } from "@data/store/FXStore.ts";
 import { useLoopStore } from "@data/store/LoopStore.ts";
 
-import {
-  TrackIndex,
-  ContainerFxBundle,
-  ContainerFxBundleID,
-  BundleContainerTypesElem,
-} from "@data/store/LoopStoreTypes.ts";
-import { loopUtils } from "@data/store/audioUtils/main.ts";
+import { TrackIndex } from "@data/store/LoopStoreTypes.ts";
+import { BundleID, BundleContainerType } from "@data/store/FXStoreTypes.ts";
 
 function App() {
-  const [bundleID, setBundleID] = useState<ContainerFxBundleID | null>(null); // for every droppable areas
-  const updateFxBundlesContainer = useLoopStore(
-    (state) => state.updateFxBundlesContainer
+  const [overlayBundleID, setOverlayBundleID] = useState<BundleID | null>(null); // for every droppable areas
+  const updateBundleConnections = useFXStore(
+    (state) => state.updateBundleConnections
   );
   const updateTrackFXs = useLoopStore((state) => state.updateTrackFXs);
 
@@ -42,28 +38,23 @@ function App() {
 
   const handleDragStart = (e: DragStartEvent) => {
     const { active /*draggable elem*/ } = e;
-    setBundleID(active.data.current?.containerFxBundleID);
+    setOverlayBundleID(active.data.current?.bundleID);
   };
   const handleDragEnd = (e: DragEndEvent) => {
     const { active /*draggable elem*/, over /*droppable elem*/ } = e;
 
-    const containerFxBundleID: ContainerFxBundleID =
-      active.data.current?.containerFxBundleID;
-    const containerFxBundle: ContainerFxBundle =
-      loopUtils.convertFxBundleToContainerFxBundle(
-        active.data.current?.containerFxBundle
-      );
+    const bundleID: BundleID = active.data.current?.bundleID;
 
-    const drag_bundleContainerType: BundleContainerTypesElem =
+    const drag_bundleContainerType: BundleContainerType =
       active?.data.current?.bundleContainerType;
-    const drop_bundleContainerType: BundleContainerTypesElem =
+    const drop_bundleContainerType: BundleContainerType =
       over?.data.current?.bundleContainerType;
 
     const drag_trackIndex: TrackIndex = active?.data.current?.trackIndex;
     const drop_trackIndex: TrackIndex = over?.data.current?.trackIndex;
 
-    setBundleID(null);
-
+    setOverlayBundleID(null);
+    console.log(bundleID);
     const isSameDroppableContainer =
       drag_bundleContainerType === drop_bundleContainerType &&
       drag_trackIndex === drop_trackIndex;
@@ -71,11 +62,12 @@ function App() {
     if (!over) {
       if (!drag_bundleContainerType && !drop_bundleContainerType) return;
       //updating
-      updateFxBundlesContainer(drag_bundleContainerType, {
-        operationType: "DELETE",
-        trackIndex: drag_trackIndex,
-        containerFxBundleID: containerFxBundleID,
-      });
+      updateBundleConnections(
+        bundleID,
+        "DELETE",
+        drag_bundleContainerType,
+        drag_trackIndex
+      );
       updateTrackFXs(drag_trackIndex);
       return;
     }
@@ -84,20 +76,22 @@ function App() {
 
     if (drag_bundleContainerType != null) {
       //updating
-      updateFxBundlesContainer(drag_bundleContainerType, {
-        operationType: "DELETE",
-        trackIndex: drag_trackIndex,
-        containerFxBundleID: containerFxBundleID,
-      });
+      updateBundleConnections(
+        bundleID,
+        "DELETE",
+        drag_bundleContainerType,
+        drag_trackIndex
+      );
       updateTrackFXs(drag_trackIndex);
     }
     if (drop_bundleContainerType != null) {
       //updating
-      updateFxBundlesContainer(drop_bundleContainerType, {
-        operationType: "ADD",
-        trackIndex: drop_trackIndex,
-        containerFxBundle: containerFxBundle,
-      });
+      updateBundleConnections(
+        bundleID,
+        "ADD",
+        drop_bundleContainerType,
+        drop_trackIndex
+      );
       updateTrackFXs(drop_trackIndex);
     }
   };
@@ -124,7 +118,7 @@ function App() {
             "w-11 h-11 rounded-lg cursor-pointer border-2 border-[#959595] text-[#959595] flex flex-row justify-center items-center"
           }
         >
-          {bundleID != null ? String(bundleID + 1) : "null"}
+          {overlayBundleID != null ? String(overlayBundleID + 1) : "null"}
         </div>
       </DragOverlay>
     </DndContext>

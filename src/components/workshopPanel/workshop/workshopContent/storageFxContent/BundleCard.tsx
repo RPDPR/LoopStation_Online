@@ -1,9 +1,10 @@
 import { FC } from "react";
 import { useFXStore } from "@data/store/FXStore.ts";
 import { useDraggable } from "@dnd-kit/core";
+import { BundleID } from "@data/store/FXStoreTypes.ts";
 
 type T_BundleCard = {
-  bundleID: number;
+  bundleID: BundleID;
 };
 
 export const BundleCard: FC<T_BundleCard> = ({ bundleID }) => {
@@ -21,8 +22,7 @@ export const BundleCard: FC<T_BundleCard> = ({ bundleID }) => {
   const { attributes, listeners, setNodeRef } = useDraggable({
     id: `bundle-${bundleID}`,
     data: {
-      containerFxBundleID: bundleID,
-      containerFxBundle: bundle ?? null, //This is the main bundle, Not converted yet.
+      bundleID: bundleID,
     },
   });
 

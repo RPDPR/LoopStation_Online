@@ -1,6 +1,7 @@
 import { FC, MouseEventHandler } from "react";
 import { TrackFx_BundleCard } from "./trackFxContent/TrackFx_BundleCard.tsx";
 import { useLoopStore } from "@data/store/LoopStore.ts";
+import { loopUtils } from "@data/store/audioUtils/main.ts";
 import { TrackIndex, Track_IsSelected } from "@data/store/LoopStoreTypes.ts";
 import { useDroppable } from "@dnd-kit/core";
 
@@ -51,16 +52,15 @@ export const TrackFx: FC<T_TrackFx> = ({ trackIndex }) => {
     trackArray.forEach((_, i) => {
       setTrackSelection(i as TrackIndex, i === trackIndex);
     });
+    console.log(containerFxBundles);
   };
 
-  const containerFxBundles = useLoopStore(
-    (state) => state.trackFX[trackIndex].containerFxBundles
-  );
+  const containerFxBundles = loopUtils.getConnectedBundlesToTrack(trackIndex);
 
   const droppable = useDroppable({
     id: `track-${trackIndex}`,
     data: {
-      bundleContainerType: "trackFX",
+      bundleContainerType: "TRACKFX",
       trackIndex: trackIndex,
     },
   });

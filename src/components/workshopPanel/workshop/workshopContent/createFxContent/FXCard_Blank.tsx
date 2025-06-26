@@ -2,6 +2,7 @@ import { FC } from "react";
 import { useFXStore } from "@data/store/FXStore.ts";
 import { useLoopStore } from "@data/store/LoopStore.ts";
 import { FxID, FxName } from "@data/store/FXStoreTypes.ts";
+import { trackIndexArray } from "@data/store/LoopStoreTypes.ts";
 import { FX_PARAMS_TEMPLATES } from "@data/store/FX_ParamsObjects";
 
 type T_FXCard_Blank = {
@@ -15,9 +16,7 @@ export const FXCard_Blank: FC<T_FXCard_Blank> = ({
 }) => {
   const addFX = useFXStore((state) => state.addFX);
   const updateFXParams = useFXStore((state) => state.updateFXParams);
-  const updateEntireFxBundleContainers = useLoopStore(
-    (state) => state.updateEntireFxBundleContainers
-  );
+  const updateTrackFXs = useLoopStore((state) => state.updateTrackFXs);
 
   const bundleArray = useFXStore((state) => state.bundleArray);
   const bundle = bundleArray.find((bdl) => bdl.bundleIsSelected);
@@ -27,7 +26,9 @@ export const FXCard_Blank: FC<T_FXCard_Blank> = ({
       addFX(bundle.bundleID, fxID, fxName ?? FX_PARAMS_TEMPLATES[fxID].name);
       updateFXParams(bundle.bundleID, fxID, {});
 
-      updateEntireFxBundleContainers(bundle.bundleID);
+      trackIndexArray.forEach((trackIndex) => {
+        updateTrackFXs(trackIndex);
+      });
     }
   };
 

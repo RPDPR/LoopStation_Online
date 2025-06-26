@@ -1,4 +1,5 @@
 import { FX_ParamsTypes, FX_ID, FX_NAME } from "@data/store/FX_ParamsTypes.ts";
+import { TrackIndex } from "@data/store/LoopStoreTypes.ts";
 import { ToneAudioNode } from "tone";
 
 // Bundle types /////
@@ -21,11 +22,34 @@ export type BundleParams = {
   fxs: Fxs;
 };
 
+// Bundle Connections /////
+export const BundleContainerTypeArray = [
+  "INPUTFX",
+  "TRACKFX",
+  "MASTERFX",
+] as const;
+export type BundleContainerTypeArray = typeof BundleContainerTypeArray;
+
+export type BundleContainerType = BundleContainerTypeArray[number];
+
+export type BundleConnections = {
+  [K in BundleContainerType]: K extends "TRACKFX"
+    ? Record<TrackIndex, boolean>
+    : boolean;
+};
+
+export const OperationTypes = ["ADD", "DELETE"] as const;
+export type OperationTypes = typeof OperationTypes;
+
+export type OperationTypeElem = OperationTypes[number];
+
+// Main Bundle Type /////
 export interface Bundle {
   bundleID: BundleID;
   bundleName: BundleName;
   bundleIsSelected: BundleIsSelected;
   bundleParams: BundleParams;
+  bundleConnections: BundleConnections;
 }
 
 // FX Node Params Types /////
@@ -67,6 +91,12 @@ export interface FXStore {
     isSelected: BundleIsSelected
   ) => void;
   setBundleName: (bundleID: BundleID, bundleName: BundleName) => void;
+  updateBundleConnections: (
+    bundleID: BundleID,
+    operationType: OperationTypeElem,
+    bundleContainerType: BundleContainerType,
+    trackIndex?: TrackIndex | -1
+  ) => void;
   // BUNDLE EDITING /////
 
   // FX EDITING /////

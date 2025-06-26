@@ -7,15 +7,13 @@ import {
 import { Bundle, T_FX_Node } from "@data/store/FXStoreTypes.ts";
 import { FX_PARAMS_TEMPLATES } from "@data/store/FX_ParamsObjects.ts";
 import {
-  TrackFX,
-  MasterFX,
-  InputFX,
   ContainerFxBundle,
   Track_DW_NodeValue,
   Track_OG_NodeValue,
   Track_DW_Nodes,
   Track_OG_Node,
 } from "@data/store/LoopStoreTypes.ts";
+import { useFXStore } from "@data/store/FXStore.ts";
 
 export const FXUtils = {
   splitFXParams<K extends keyof typeof FX_PARAMS_DEFAULTS>(
@@ -148,13 +146,27 @@ export const loopUtils = {
     return new Tone.ToneAudioBuffer(quantizedBuffer);
   },
 
+  getConnectedBundlesToTrack: (trackIndex: number): Bundle[] => {
+    const fxStore = useFXStore.getState();
+    const bundleArray = fxStore.bundleArray;
+
+    const connectedBundles: Bundle[] = [];
+
+    bundleArray.forEach((bundle) => {
+      Object.entries(bundle.bundleConnections.TRACKFX).forEach(
+        ([key, value]) => {
+          if (key === String(trackIndex) && value) {
+            connectedBundles.push(bundle);
+          }
+        }
+      );
+    });
+
+    return connectedBundles;
+  },
+
   getTrackFxNodes: (
     trackIndex: number,
-    bundleContainers: {
-      trackFX?: TrackFX[];
-      masterFX?: MasterFX;
-      inputFX?: InputFX;
-    },
     includeFlags: {
       includeTrackFxNodes?: boolean;
       includeMasterFxNodes?: boolean;
@@ -167,27 +179,43 @@ export const loopUtils = {
       includeInputFxNodes = false,
     } = includeFlags;
 
+    const fxStore = useFXStore.getState();
+    const bundleArray = fxStore.bundleArray;
+
     const fxNodes: Tone.ToneAudioNode[] = [];
 
-    if (includeTrackFxNodes && bundleContainers.trackFX) {
-      const trackFxBundles =
-        bundleContainers.trackFX[trackIndex].containerFxBundles;
-      trackFxBundles.forEach((bundle) => {
-        bundle.bundleParams.fxs.forEach((fx) => fxNodes.push(fx.fxNode!));
-      });
-    }
+    bundleArray.forEach((bundle) => {
+      if (includeTrackFxNodes) {
+        Object.entries(bundle.bundleConnections.TRACKFX).forEach(
+          ([key, value]) => {
+            if (key === String(trackIndex) && value) {
+              bundle.bundleParams.fxs.forEach((fx) => {
+                if (fx.fxNode) {
+                  fxNodes.push(fx.fxNode);
+                }
+              });
+            }
+          }
+        );
+      }
+      if (includeMasterFxNodes) {
+        if (bundle.bundleConnections.MASTERFX)
+          bundle.bundleParams.fxs.forEach((fx) => {
+            if (fx.fxNode) {
+              fxNodes.push(fx.fxNode);
+            }
+          });
+      }
+      if (includeInputFxNodes) {
+        if (bundle.bundleConnections.INPUTFX)
+          bundle.bundleParams.fxs.forEach((fx) => {
+            if (fx.fxNode) {
+              fxNodes.push(fx.fxNode);
+            }
+          });
+      }
+    });
 
-    if (includeMasterFxNodes && bundleContainers.masterFX) {
-      bundleContainers.masterFX.containerFxBundles.forEach((bundle) => {
-        bundle.bundleParams.fxs.forEach((fx) => fxNodes.push(fx.fxNode!));
-      });
-    }
-
-    if (includeInputFxNodes && bundleContainers.inputFX) {
-      bundleContainers.inputFX.containerFxBundles.forEach((bundle) => {
-        bundle.bundleParams.fxs.forEach((fx) => fxNodes.push(fx.fxNode!));
-      });
-    }
     return fxNodes;
   },
 
