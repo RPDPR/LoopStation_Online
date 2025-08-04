@@ -1,33 +1,6 @@
 import { FX_ParamsTypes, FX_ID, FX_NAME } from "@data/store/FX_ParamsTypes.ts";
+import { TrackIndex } from "@data/store/LoopStoreTypes.ts";
 import { ToneAudioNode } from "tone";
-
-// TYPES DEFINITION /////
-export type BOG_GainValue = number;
-export type BOG_GainNode = ToneAudioNode;
-export type BOG_Min = number;
-export type BOG_Max = number;
-export type BOG_Step = number;
-
-export type BDW_DryWetValue = number;
-export type BDW_DryWetNode = ToneAudioNode;
-export type BDW_Min = number;
-export type BDW_Max = number;
-export type BDW_Step = number;
-
-export type BundleOutputGain = {
-  gainValue: BOG_GainValue;
-  gainNode: BOG_GainNode;
-  min: BOG_Min;
-  max: BOG_Max;
-  step?: BOG_Step;
-};
-export type BundleDryWet = {
-  dryWetValue: BDW_DryWetValue;
-  dryWetNode: BDW_DryWetNode;
-  min: BDW_Min;
-  max: BDW_Max;
-  step?: BDW_Step;
-};
 
 // Bundle types /////
 export type BundleID = number;
@@ -47,15 +20,36 @@ export type Fxs = {
 }[];
 export type BundleParams = {
   fxs: Fxs;
-  outputGain: BundleOutputGain;
-  dryWet: BundleDryWet;
 };
 
+// Bundle Connections /////
+export const BundleContainerTypeArray = [
+  "INPUTFX",
+  "TRACKFX",
+  "MASTERFX",
+] as const;
+export type BundleContainerTypeArray = typeof BundleContainerTypeArray;
+
+export type BundleContainerType = BundleContainerTypeArray[number];
+
+export type BundleConnections = {
+  [K in BundleContainerType]: K extends "TRACKFX"
+    ? Record<TrackIndex, boolean>
+    : boolean;
+};
+
+export const OperationTypes = ["ADD", "DELETE"] as const;
+export type OperationTypes = typeof OperationTypes;
+
+export type OperationTypeElem = OperationTypes[number];
+
+// Main Bundle Type /////
 export interface Bundle {
   bundleID: BundleID;
   bundleName: BundleName;
   bundleIsSelected: BundleIsSelected;
   bundleParams: BundleParams;
+  bundleConnections: BundleConnections;
 }
 
 // FX Node Params Types /////
@@ -97,12 +91,11 @@ export interface FXStore {
     isSelected: BundleIsSelected
   ) => void;
   setBundleName: (bundleID: BundleID, bundleName: BundleName) => void;
-  setBundleParams: (
+  updateBundleConnections: (
     bundleID: BundleID,
-    params: {
-      gainValue?: BOG_GainValue;
-      dryWetValue?: BDW_DryWetValue;
-    }
+    operationType: OperationTypeElem,
+    bundleContainerType: BundleContainerType,
+    trackIndex?: TrackIndex | -1
   ) => void;
   // BUNDLE EDITING /////
 

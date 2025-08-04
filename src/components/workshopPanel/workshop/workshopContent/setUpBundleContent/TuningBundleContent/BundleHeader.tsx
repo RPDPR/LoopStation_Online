@@ -3,14 +3,14 @@ import { useFXStore } from "@data/store/FXStore.ts";
 import { BundleID } from "@data/store/FXStoreTypes.ts";
 
 type T_BundleHeader = {
-  bundleSelectedID: BundleID;
+  selectedBundleID: BundleID;
 };
 
-export const BundleHeader: FC<T_BundleHeader> = ({ bundleSelectedID }) => {
+export const BundleHeader: FC<T_BundleHeader> = ({ selectedBundleID }) => {
   const setBundleName = useFXStore((state) => state.setBundleName);
   const bundleArray = useFXStore((state) => state.bundleArray);
-  const bundle = bundleArray[bundleSelectedID];
-  const bundleUserID = bundle.bundleID + 1;
+  const bundle = bundleArray[selectedBundleID];
+  const userBundleID = bundle.bundleID + 1;
 
   const handleFocus = (e: React.FocusEvent<HTMLInputElement>) => {
     e.target.value = bundle.bundleName;
@@ -30,7 +30,7 @@ export const BundleHeader: FC<T_BundleHeader> = ({ bundleSelectedID }) => {
       <div className="w-full flex flex-row justify-between items-center gap-x-1 basis-1/5">
         <div className="text-xs leading-none">ID:</div>
         <div className="text-xs leading-none text-white/40">
-          {String(bundleUserID)}
+          {String(userBundleID)}
         </div>
       </div>
       <div className="w-full h-full flex flex-row justify-center items-center gap-x-1 basis-4/5">

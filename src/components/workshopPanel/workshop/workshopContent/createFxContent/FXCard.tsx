@@ -1,7 +1,8 @@
 import { FC, useState } from "react";
-import { useLoopStore } from "@data/store/LoopStore.ts";
 import { useFXStore } from "@data/store/FXStore.ts";
+import { useLoopStore } from "@data/store/LoopStore.ts";
 import { BundleID, FxID, FxName } from "@data/store/FXStoreTypes.ts";
+import { trackIndexArray } from "@data/store/LoopStoreTypes.ts";
 import { Trash2 } from "lucide-react";
 
 type T_FXCard = {
@@ -17,9 +18,7 @@ export const FXCard: FC<T_FXCard> = ({
 }) => {
   const deleteFX = useFXStore((state) => state.deleteFX);
   const setFXSelection = useFXStore((state) => state.setFXSelection);
-  const updateEntireFxBundleContainers = useLoopStore(
-    (state) => state.updateEntireFxBundleContainers
-  );
+  const updateTrackFXs = useLoopStore((state) => state.updateTrackFXs);
 
   const bundleArray = useFXStore((state) => state.bundleArray);
   const bundle =
@@ -45,7 +44,9 @@ export const FXCard: FC<T_FXCard> = ({
     if (!isReadyToDelete) return;
 
     deleteFX(bundle.bundleID, fxID);
-    updateEntireFxBundleContainers(bundle.bundleID);
+    trackIndexArray.forEach((trackIndex) => {
+      updateTrackFXs(trackIndex);
+    });
 
     if (isReadyToDelete) setIsReadyToDelete(false);
   };

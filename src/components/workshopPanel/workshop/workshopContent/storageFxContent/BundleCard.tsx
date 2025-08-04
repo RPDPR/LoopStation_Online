@@ -1,9 +1,10 @@
 import { FC } from "react";
 import { useFXStore } from "@data/store/FXStore.ts";
 import { useDraggable } from "@dnd-kit/core";
+import { BundleID } from "@data/store/FXStoreTypes.ts";
 
 type T_BundleCard = {
-  bundleID: number;
+  bundleID: BundleID;
 };
 
 export const BundleCard: FC<T_BundleCard> = ({ bundleID }) => {
@@ -12,19 +13,18 @@ export const BundleCard: FC<T_BundleCard> = ({ bundleID }) => {
   const isSelected = bundle?.bundleIsSelected ?? false;
   const setBundleSelection = useFXStore((state) => state.setBundleSelection);
 
-  const { attributes, listeners, setNodeRef } = useDraggable({
-    id: `bundle-${bundleID}`,
-    data: {
-      containerFxBundleID: bundleID,
-      containerFxBundle: bundle ?? null, //This is the main bundle, Not converted yet.
-    },
-  });
-
   const handleClick: React.MouseEventHandler<HTMLDivElement> = () => {
     bundleArray.forEach((bundle) => {
       setBundleSelection(bundle.bundleID, bundle.bundleID === bundleID);
     });
   };
+
+  const { attributes, listeners, setNodeRef } = useDraggable({
+    id: `bundle-${bundleID}`,
+    data: {
+      bundleID: bundleID,
+    },
+  });
 
   return (
     <div
@@ -40,7 +40,7 @@ export const BundleCard: FC<T_BundleCard> = ({ bundleID }) => {
           (isSelected
             ? "border-[#959595] text-[#959595] hover:border-[#959595] hover:text-[#959595]"
             : "border-[#757575] text-[#757575] hover:border-[#858585] hover:text-[#858585]") +
-          " flex flex-row justify-center items-center transition-color duration-150"
+          " flex flex-row justify-center items-center transition-colors duration-150"
         }
       >
         {String(bundleID + 1)}
